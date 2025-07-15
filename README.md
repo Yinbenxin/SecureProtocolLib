@@ -2,7 +2,7 @@
 
 ## 简介
 
-SecureProtocolLib是一个基于[隐语（YACL）](https://github.com/secretflow/yacl)和其他开源库开发的安全协议库，主要提供隐私集合求交（PSI）和隐私信息检索（PIR）功能。该库同时支持C++和Python接口，方便在不同场景下使用。
+SecureProtocolLib是一个基于[隐语（PSi）](https://github.com/secretflow/psi)和其他开源库开发的安全协议库，主要提供隐私集合求交（PSI）和隐私信息检索（PIR）功能。该库同时支持C++和Python接口，方便在不同场景下使用。
 
 ## 功能特点
 
