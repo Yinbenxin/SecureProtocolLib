@@ -1,0 +1,27 @@
+load("@yacl//bazel:yacl.bzl", "AES_COPT_FLAGS")
+load("//bazel:curve.bzl", "curve_cc_binary", "curve_cc_library", "curve_cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+curve_cc_library(
+    name = "vole_psi",
+    srcs = ["vole_psi.cc"],
+    hdrs = ["vole_psi.h"],
+    deps = [
+        "@psi//psi/rr22:rr22_psi",
+        "@yacl//yacl/crypto/rand",
+        "@yacl//yacl/link:context",
+    ],
+)
+
+
+curve_cc_binary(
+    name = "volepsi_test",
+    srcs = ["volepsi_test.cc"],
+    deps = [
+        ":vole_psi",
+    ],
+)
+
+
+
