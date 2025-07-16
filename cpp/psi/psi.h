@@ -34,6 +34,12 @@
 #include "psi/rr22/rr22_utils.h"
 #include "psi/utils/hash_bucket_cache.h"
 
+// 定义 PSI 类型
+// enum PsiType {
+//   ECDHPSI = 0,
+//   RR22 = 1,
+// };
+
 namespace psi {
 class Psi {
  public:
