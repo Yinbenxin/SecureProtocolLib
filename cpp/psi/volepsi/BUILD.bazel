@@ -7,6 +7,11 @@ curve_cc_library(
     name = "vole_psi",
     srcs = ["vole_psi.cc"],
     hdrs = ["vole_psi.h"],
+    linkopts = select({
+        "@platforms//os:windows": ["/FORCE:UNRESOLVED"],
+        "@platforms//os:linux": ["-static-libstdc++", "-static-libgcc"],
+        "//conditions:default": [],
+    }),
     deps = [
         "@psi//psi/rr22:rr22_psi",
         "@yacl//yacl/crypto/rand",

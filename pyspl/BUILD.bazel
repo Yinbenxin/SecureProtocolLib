@@ -23,7 +23,7 @@ pybind_extension(
     srcs = ["libpsi.cc"],
     linkopts = select({
         "@platforms//os:windows": ["/FORCE:UNRESOLVED"],
-        "@platforms//os:linux": ["-static-libstdc++", "-static-libgcc", "-Wl,--no-as-needed", "-Wl,-Bstatic", "-Wl,--whole-archive", "-lpthread", "-Wl,--no-whole-archive", "-static"],
+        "@platforms//os:linux": ["-static-libstdc++", "-static-libgcc"],
         "//conditions:default": [],
     }),
     deps = [
