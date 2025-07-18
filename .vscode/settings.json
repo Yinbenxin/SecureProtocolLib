@@ -65,6 +65,7 @@
         "istream": "cpp",
         "print": "cpp",
         "streambuf": "cpp",
-        "complex": "cpp"
+        "complex": "cpp",
+        "*.inc": "cpp"
     }
 }

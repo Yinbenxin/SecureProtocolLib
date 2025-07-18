@@ -8,11 +8,12 @@ namespace psi {
 
 PYBIND11_MODULE(libpsi, m) {
   py::class_<Psi>(m, "Psi")
-      .def(py::init<size_t, std::string, std::string, std::string, size_t, size_t, std::string, size_t, bool, bool, bool, bool, std::string, size_t, const std::map<std::string, std::string>&>(),
+      .def(py::init<size_t, std::string, std::string, std::string, size_t, size_t, size_t, std::string, size_t, bool, bool, bool, bool, std::string, size_t, const std::map<std::string, std::string>&>(),
            py::arg("role"),
            py::arg("taskid"),
            py::arg("party"),
            py::arg("redis"),
+           py::arg("curve_type") = 1,
            py::arg("psi_type") = 1,
            py::arg("sysectbits") = 112,
            py::arg("log_dir") = ".",

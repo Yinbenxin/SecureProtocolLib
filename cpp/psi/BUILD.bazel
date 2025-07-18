@@ -14,6 +14,8 @@ curve_cc_library(
     }),
     deps = [
         "//cpp/psi/volepsi:vole_psi",
+        "//cpp/psi/ecdhpsi:ecdh_psi",
+
     ],
 )
 

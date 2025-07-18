@@ -45,6 +45,13 @@ py_test(
     deps = [":psi_lib"],
 )
 
+py_test(
+    name = "ecdh_psi_test",
+    srcs = ["ecdh_psi_test.py"],
+    deps = [":psi_lib"],
+)
+
+
 # 添加一个别名目标，使 libpsi.so 可以被直接引用
 filegroup(
     name = "libpsi_so",

@@ -15,6 +15,7 @@
 
 
 #include "cpp/psi/psi.h"
+#include "cpp/psi/ecdhpsi/ecdh_psi.h"
 #include "cpp/psi/volepsi/vole_psi.h"
 #include <algorithm>
 #include <stdexcept>
@@ -34,7 +35,10 @@ std::vector<std::string> Psi::Run(size_t role, const std::vector<std::string>& i
     switch (psi_type_) {
       case 0: {
         // ECDH PSI
-        throw std::runtime_error("ECDH PSI (type 0) is not yet implemented in this version");
+        ECDHPsi ecdh_psi(role_, taskid_, party_, redis_, psi_type_, curve_type_, sysectbits_,  log_dir_, 
+                        log_level_, log_with_console_, net_log_switch_, server_output_, 
+                        use_redis_, chl_type_,connect_wait_time_, meta_);
+        return ecdh_psi.Run(role, input, fast_mode, malicious, broadcast_result);
       }
       case 1: {
         // VOLE PSI
