@@ -1,4 +1,3 @@
-<!-- cspell:disable -->
 # SecureProtocolLib (中文)
 
 ## 简介
