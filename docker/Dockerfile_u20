@@ -28,7 +28,7 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ] ; then CONDA_ARCH=aarch64 ; else CO
     && chmod +x cmakeinstall.sh \
     && ./cmakeinstall.sh --prefix=/usr/local/bin/ --exclude-subdir \
     && rm cmakeinstall.sh \
-    && ln -s /usr/local/bin/cmake  /usr/bin/cmake
+    && ln -s /usr/local/bin/bin/cmake  /usr/bin/cmake
 
 
 # clang is required on arm64 platform
