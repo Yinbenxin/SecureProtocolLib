@@ -16,23 +16,9 @@
 
 #include "vole_psi.h"
 #include <algorithm>
-#include "fmt/format.h"
+
 
 namespace psi {
-
-std::shared_ptr<yacl::link::Context> VolePsi::SetupGrpclinks() {
-  size_t world_size = 2;
-  yacl::link::ContextDesc ctx_desc;
-  for (size_t rank = 0; rank < world_size; rank++) {
-    const auto id = fmt::format("id-{}", role_);
-    const auto host = fmt::format("127.0.0.1:{}", 10086 + role_*10);
-    ctx_desc.parties.emplace_back(id, host);
-  }
-  auto lctx = yacl::link::FactoryBrpc().CreateContext(ctx_desc, role_);
-  lctx->add_gaia_net(taskid_, chl_type_, party_, redis_, connect_wait_time_, use_redis_, net_log_switch_, meta_);
-  return lctx;
-}
-
 
 std::vector<std::string> VolePsi::Run(size_t role, const std::vector<std::string>& input, bool fast_mode, bool malicious, bool broadcast_result){
     SPDLOG_INFO("[VolePsi] start");
@@ -43,9 +29,9 @@ std::vector<std::string> VolePsi::Run(size_t role, const std::vector<std::string
     SPDLOG_INFO("[VolePsi] broadcast result: {}", broadcast_result);
     
   
-  std::shared_ptr<yacl::link::Context> lctxs = SetupGrpclinks();
+  std::shared_ptr<yacl::link::Context> lctxs = utils::SetupGrpclinks(role_, taskid_, chl_type_, party_, redis_, 
+                               connect_wait_time_, use_redis_, net_log_switch_, meta_);
 
-    
     rr22::Rr22PsiOptions psi_options(sysectbits_, 0, true);
     if (fast_mode)
     {

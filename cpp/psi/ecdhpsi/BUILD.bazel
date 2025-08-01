@@ -16,6 +16,7 @@ curve_cc_library(
         "@psi//psi/ecdh:ecdh_psi",
         "@yacl//yacl/crypto/rand",
         "@yacl//yacl/link:context",
+        "//cpp/psi/utils:network_utils",
     ],
 )
 

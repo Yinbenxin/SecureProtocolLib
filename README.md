@@ -40,8 +40,8 @@ bazel build //cpp/...
 # 构建并安装Python包
 python setup.py install
 
-# 或者安装开发版本
-python setup.py develop
+# 构建分发包
+ python setup.py sdist bdist_wheel
 ```
 
 ### 使用Python包

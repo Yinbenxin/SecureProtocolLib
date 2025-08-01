@@ -1,0 +1,14 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "network_utils",
+    srcs = ["network_utils.cc"],
+    hdrs = ["network_utils.h"],
+    deps = [
+        "@com_github_gabime_spdlog//:spdlog",
+        "@yacl//yacl/link:context",
+        "@yacl//yacl/link:test_util",
+    ],
+)

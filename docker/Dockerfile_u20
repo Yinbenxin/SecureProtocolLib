@@ -1,0 +1,70 @@
+FROM ubuntu:20.04
+
+LABEL maintainer="build SecureProtocolLib on ubuntu:20.04"
+
+ARG TARGETPLATFORM
+
+# change dash to bash as default shell
+RUN ln -sf /bin/bash /bin/sh
+
+
+RUN apt update \
+    && apt upgrade -y \
+    && apt install -y software-properties-common \
+    && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
+    && apt upgrade -y \
+    && apt install -y gcc-11 g++-11 libasan6 \
+    git wget curl unzip autoconf build-essential libssl-dev lld\
+    ninja-build vim-common libgl1 libglib2.0-0 \
+    && DEBIAN_FRONTEND=noninteractive apt install -y tzdata \
+    && apt clean \
+    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100 \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 
+
+
+# install cmake
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ] ; then CONDA_ARCH=aarch64 ; else CONDA_ARCH=x86_64 ; fi \
+    && curl -sL https://github.com/Kitware/CMake/releases/download/v3.26.1/cmake-3.26.1-linux-$CONDA_ARCH.sh -o cmakeinstall.sh \
+    && chmod +x cmakeinstall.sh \
+    && ./cmakeinstall.sh --prefix=/usr/local/bin/ --exclude-subdir \
+    && rm cmakeinstall.sh \
+    && ln -s /usr/local/bin/bin/cmake  /usr/bin/cmake
+
+
+# clang is required on arm64 platform
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ] ; then \
+    echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main" > /etc/apt/sources.list.d/llvm.list \
+    && echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main" >> /etc/apt/sources.list.d/llvm.list \
+    && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
+    && apt update \
+    && apt install -y clang-15 \
+    && apt clean \
+    && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 100 \
+    && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 100 \
+; fi
+
+
+# amd64 is only reqiured on amd64 platform
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ] ; then apt install -y nasm ; fi
+
+# install conda
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ] ; then CONDA_ARCH=aarch64 ; else CONDA_ARCH=x86_64 ; fi \
+    && wget https://repo.anaconda.com/miniconda/Miniconda3-py38_23.11.0-2-Linux-$CONDA_ARCH.sh \
+    && bash Miniconda3-py38_23.11.0-2-Linux-$CONDA_ARCH.sh -b \
+    && rm -f Miniconda3-py38_23.11.0-2-Linux-$CONDA_ARCH.sh \
+    && /root/miniconda3/bin/conda init
+
+# Add conda to path
+ENV PATH="/root/miniconda3/bin:${PATH}"
+
+# install bazel
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ] ; then BAZEL_ARCH=arm64 ; else BAZEL_ARCH=amd64 ; fi \
+    && wget https://github.com/bazelbuild/bazelisk/releases/download/v1.25.0/bazelisk-linux-$BAZEL_ARCH \
+    && mv bazelisk-linux-$BAZEL_ARCH /usr/bin/bazelisk \
+    && chmod +x /usr/bin/bazelisk \
+    && ln -s /usr/bin/bazelisk /usr/bin/bazel
+
+# run as root for now
+WORKDIR /home/admin/
+
+ENTRYPOINT [ "/bin/bash", "-lc" ]

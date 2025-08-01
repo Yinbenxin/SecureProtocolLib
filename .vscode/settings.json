@@ -66,6 +66,8 @@
         "print": "cpp",
         "streambuf": "cpp",
         "complex": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "strstream": "cpp",
+        "scoped_allocator": "cpp"
     }
 }

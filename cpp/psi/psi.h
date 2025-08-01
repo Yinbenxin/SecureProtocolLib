@@ -77,6 +77,8 @@ class Psi {
   
   ~Psi() = default;
   std::vector<std::string> Run(size_t role, const std::vector<std::string>& input, bool fast_mode = false, bool malicious = false, bool broadcast_result = false);
+
+    
 private:
   size_t role_;
   std::string taskid_;
@@ -95,4 +97,9 @@ private:
   std::string chl_type_ = "mem";
   std::map<std::string, std::string> meta_;
 };
+
+
+
 }  // namespace psi
+
+

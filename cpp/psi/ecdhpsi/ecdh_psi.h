@@ -32,6 +32,7 @@
 #include "yacl/link/context.h"
 #include "yacl/base/exception.h"
 #include "psi/ecdh/ecdh_psi.h"
+#include "cpp/psi/utils/network_utils.h"
 // curve_type：
 // CURVE_25519 = 1,
 // CURVE_FOURQ = 2,
@@ -71,7 +72,6 @@ class ECDHPsi {
   std::vector<std::string> Run(size_t role, const std::vector<std::string>& input, bool fast_mode, bool malicious, bool broadcast_result);
 
 private:
-  std::shared_ptr<yacl::link::Context> SetupGrpclinks();
   size_t role_;
   std::string taskid_;
   std::string party_;
