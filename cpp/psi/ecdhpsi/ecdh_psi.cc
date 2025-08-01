@@ -20,20 +20,6 @@
 
 namespace psi {
 
-std::shared_ptr<yacl::link::Context> ECDHPsi::SetupGrpclinks() {
-  size_t world_size = 2;
-  yacl::link::ContextDesc ctx_desc;
-  for (size_t rank = 0; rank < world_size; rank++) {
-    const auto id = fmt::format("id-{}", role_);
-    const auto host = fmt::format("127.0.0.1:{}", 10086 + role_*10);
-    ctx_desc.parties.emplace_back(id, host);
-  }
-  auto lctx = yacl::link::FactoryBrpc().CreateContext(ctx_desc, role_);
-  lctx->add_gaia_net(taskid_, chl_type_, party_, redis_, connect_wait_time_, use_redis_, net_log_switch_, meta_);
-  return lctx;
-}
-
-
 std::vector<std::string> ECDHPsi::Run(size_t role, const std::vector<std::string>& input, bool fast_mode, bool malicious, bool broadcast_result){
     SPDLOG_INFO("[ECDHPsi] start");
     SPDLOG_INFO("[ECDHPsi] role: {}", role);
@@ -42,7 +28,8 @@ std::vector<std::string> ECDHPsi::Run(size_t role, const std::vector<std::string
     SPDLOG_INFO("[ECDHPsi] malicious: {}", malicious);
     SPDLOG_INFO("[ECDHPsi] broadcast result: {}", broadcast_result);
     
-  std::shared_ptr<yacl::link::Context> lctxs = SetupGrpclinks();
+  std::shared_ptr<yacl::link::Context> lctxs = utils::SetupGrpclinks(role_, taskid_, chl_type_, party_, redis_, 
+                               connect_wait_time_, use_redis_, net_log_switch_, meta_);
   // 使用类成员变量curve_type_，它在构造函数中被初始化为传入的curve_type参数
   // 通过static_cast将size_t类型的curve_type_转换为psi::CurveType枚举类型
   psi::CurveType curve_type = static_cast<psi::CurveType>(curve_type_);

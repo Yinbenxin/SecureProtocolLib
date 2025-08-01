@@ -33,7 +33,7 @@
 #include "psi/rr22/rr22_psi.h"
 #include "psi/rr22/rr22_utils.h"
 #include "psi/utils/hash_bucket_cache.h"
-
+#include "cpp/psi/utils/network_utils.h"
 namespace psi {
 class VolePsi {
  public:
@@ -66,7 +66,6 @@ class VolePsi {
   std::vector<std::string> Run(size_t role, const std::vector<std::string>& input, bool fast_mode, bool malicious, bool broadcast_result);
 
 private:
-  std::shared_ptr<yacl::link::Context> SetupGrpclinks();
   size_t role_;
   std::string taskid_;
   std::string party_;

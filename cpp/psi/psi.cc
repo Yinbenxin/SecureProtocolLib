@@ -23,8 +23,6 @@
 
 namespace psi {
 
-
-
 std::vector<std::string> Psi::Run(size_t role, const std::vector<std::string>& input, bool fast_mode, bool malicious, bool broadcast_result){
     SPDLOG_INFO("[Psi] start");
     SPDLOG_INFO("[Psi] role: {}", role);
