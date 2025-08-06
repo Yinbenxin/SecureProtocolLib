@@ -15,7 +15,7 @@ curve_cc_library(
     deps = [
         "//cpp/psi/volepsi:vole_psi",
         "//cpp/psi/ecdhpsi:ecdh_psi",
-
+        "@com_github_nlohmann_json//:json",
     ],
 )
 

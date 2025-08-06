@@ -1,6 +1,7 @@
 import multiprocessing
 import random
 import logging
+import json
 from pyspl import PSIParty
 
 
@@ -14,16 +15,32 @@ def generate_test_data(size):
 
 def run_vole_psi(role):
     # 创建 VolePsi 实例
-    taskid = "taskid"
-    address = "localhost:50051"
-    redis = "localhost:6379"
-    psi_type=0
-    curve_type=4
+    config = {
+        "taskid": "taskid",
+        "role": role,
+        "party": "localhost:50051",
+        "redis": "localhost:6379",
+        "psi_type": 0,
+        "curve_type": 4,
+        "sysectbits": 112,
+        "log_dir": ".",
+        "log_level": 2,
+        "log_with_console": True,
+        "net_log_switch": False,
+        "server_output": True,
+        "use_redis": True,
+        "connect_wait_time": 60000,
+        "chl_type": "mem",
+        "fast_mode": True,
+        "malicious": False,
+        "broadcast_result": True,
+        "meta": {}
+    }
     
     logging.info(f"Python - 角色 {role} 开始初始化 PSIParty")
-    logging.info(f"Python - 参数: taskid={taskid}, address={address}, redis={redis}, psi_type={psi_type}, curve_type={curve_type}")
-    
-    psi = PSIParty(taskid, role, psi_type, curve_type, address, redis)
+    logging.info(f"Python - 配置: {config}")
+    config_str = json.dumps(config)
+    psi = PSIParty(config_json=config_str)
     
     # 生成测试数据
     input_data = generate_test_data(1000)
@@ -31,7 +48,7 @@ def run_vole_psi(role):
     
     # 调用 Run 方法并获取结果
     logging.info(f"Python - 角色 {role} 开始运行 PSI")
-    result = psi.Run(role=role, input=input_data, fast_mode=True, malicious=False, broadcast_result=True)
+    result = psi.Run(input_data)
     logging.info(f"Python - 角色 {role} PSI 运行完成，结果数量: {len(result)}")
     
     # 打印结果

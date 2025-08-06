@@ -23,27 +23,26 @@
 
 namespace psi {
 
-std::vector<std::string> Psi::Run(size_t role, const std::vector<std::string>& input, bool fast_mode, bool malicious, bool broadcast_result){
+std::vector<std::string> Psi::Run(const std::vector<std::string>& input){
     SPDLOG_INFO("[Psi] start");
-    SPDLOG_INFO("[Psi] role: {}", role);
     SPDLOG_INFO("[Psi] input size: {}", input.size());
-    SPDLOG_INFO("[Psi] fast mode: {}", fast_mode);
-    SPDLOG_INFO("[Psi] malicious: {}", malicious);
-    SPDLOG_INFO("[Psi] broadcast result: {}", broadcast_result);
+    if (!input.empty()) {
+      SPDLOG_INFO("[Psi] input[0]: {}", input[0]);
+    }
     switch (psi_type_) {
       case 0: {
         // ECDH PSI
         ECDHPsi ecdh_psi(role_, taskid_, party_, redis_, psi_type_, curve_type_, sysectbits_,  log_dir_, 
                         log_level_, log_with_console_, net_log_switch_, server_output_, 
                         use_redis_, chl_type_,connect_wait_time_, meta_);
-        return ecdh_psi.Run(role, input, fast_mode, malicious, broadcast_result);
+        return ecdh_psi.Run(role_, input, fast_mode_, malicious_, broadcast_result_);
       }
       case 1: {
         // VOLE PSI
         VolePsi vole_psi(role_, taskid_, party_, redis_, psi_type_, sysectbits_,  log_dir_, 
                         log_level_, log_with_console_, net_log_switch_, server_output_, 
                         use_redis_, chl_type_,connect_wait_time_, meta_);
-        return vole_psi.Run(role, input, fast_mode, malicious, broadcast_result);
+        return vole_psi.Run(role_, input, fast_mode_, malicious_, broadcast_result_);
       }
       default: {
         throw std::runtime_error("PSI type not supported: " + std::to_string(psi_type_));

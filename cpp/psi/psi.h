@@ -23,6 +23,7 @@
 #include <random>
 #include <tuple>
 #include <map>
+#include "nlohmann/json.hpp"
 
 #include "spdlog/spdlog.h"
 #include "fmt/format.h"
@@ -49,11 +50,18 @@
 namespace psi {
 class Psi {
  public:
-  Psi(size_t role, std::string taskid, std::string party, std::string redis, 
-         size_t psi_type = 1, size_t curve_type = 1, size_t sysectbits = 112,  std::string log_dir = ".", 
-         size_t log_level = 2, bool log_with_console = true, bool net_log_switch = false, 
-         bool server_output = true, bool use_redis = true, std::string chl_type = "mem",  size_t connect_wait_time = 60000,
-         const std::map<std::string, std::string> &meta = std::map<std::string, std::string>()) {
+  // JSON配置构造函数
+  Psi(const std::string& config_json) {
+    SPDLOG_INFO("config_json: {}", config_json);
+    InitializeFromJson(config_json);
+  }
+
+private:
+  void InitializeFromParams(size_t role, std::string taskid, std::string party, std::string redis, 
+         size_t psi_type, size_t curve_type, size_t sysectbits, std::string log_dir, 
+         size_t log_level, bool log_with_console, bool net_log_switch, 
+         bool server_output, bool use_redis, std::string chl_type, size_t connect_wait_time,
+         const std::map<std::string, std::string> &meta) {
     // 移除 meta 参数，因为 fmt 无法格式化 std::map
     SPDLOG_INFO("role: {}, taskid: {}, party: {}, redis: {}, sysectbits: {}, psi_type: {}, log_dir: {}, log_level: {}, log_with_console: {}, net_log_switch: {}, server_output: {}, use_redis: {}, chl_type: {}",
                 role, taskid, party, redis, sysectbits, psi_type, log_dir, log_level, log_with_console, net_log_switch, server_output, use_redis, chl_type);
@@ -74,9 +82,51 @@ class Psi {
     meta_ = meta;
     connect_wait_time_ = connect_wait_time;
   }
+
+  void InitializeFromJson(const std::string& config_json) {
+    try {
+      auto config = nlohmann::json::parse(config_json);
+      
+      // 解析JSON配置
+      role_ = config.value("role", 0);
+      taskid_ = config.value("taskid", "");
+      party_ = config.value("party", "localhost:50051");
+      redis_ = config.value("redis", "localhost:6379");
+      psi_type_ = config.value("psi_type", 1);
+      curve_type_ = config.value("curve_type", 1);
+      sysectbits_ = config.value("sysectbits", 112);
+      log_dir_ = config.value("log_dir", ".");
+      log_level_ = config.value("log_level", 2);
+      log_with_console_ = config.value("log_with_console", true);
+      net_log_switch_ = config.value("net_log_switch", false);
+      server_output_ = config.value("server_output", true);
+      use_redis_ = config.value("use_redis", true);
+      chl_type_ = config.value("chl_type", "mem");
+      connect_wait_time_ = config.value("connect_wait_time", 60000);
+      fast_mode_ = config.value("fast_mode", true);
+      malicious_ = config.value("malicious", false);
+      broadcast_result_ = config.value("broadcast_result", true);
+      // 解析meta字段
+      if (config.contains("meta") && config["meta"].is_object()) {
+        for (auto& [key, value] : config["meta"].items()) {
+          if (value.is_string()) {
+            meta_[key] = value.get<std::string>();
+          }
+        }
+      }
+      
+      SPDLOG_INFO("Initialized from JSON - role: {}, taskid: {}, party: {}, redis: {}, psi_type: {}, curve_type: {}", 
+                  role_, taskid_, party_, redis_, psi_type_, curve_type_);
+    } catch (const std::exception& e) {
+      SPDLOG_ERROR("Failed to parse JSON config: {}", e.what());
+      throw std::runtime_error("Invalid JSON configuration: " + std::string(e.what()));
+    }
+  }
+
+public:
   
   ~Psi() = default;
-  std::vector<std::string> Run(size_t role, const std::vector<std::string>& input, bool fast_mode = false, bool malicious = false, bool broadcast_result = false);
+  std::vector<std::string> Run(const std::vector<std::string>& input);
 
     
 private:
@@ -96,6 +146,9 @@ private:
   bool use_redis_ = true;
   std::string chl_type_ = "mem";
   std::map<std::string, std::string> meta_;
+  bool fast_mode_ = true;
+  bool malicious_ = false;
+  bool broadcast_result_ = true;
 };
 
 
