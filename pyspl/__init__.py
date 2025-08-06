@@ -1,12 +1,13 @@
-from typing import List
-from .libpsi import Psi, Channel as _Channel
 import logging
+from pyspl.src.psi import PSIParty
+from pyspl.src.channel import Channel
+
 # 配置日志
 # 日志格式选项：
 # 1. 使用完整路径 (默认，便于在IDE中直接点击跳转)
-log_format_full_path = '%(asctime)s - [%(levelname)s] - [%(pathname)s:%(lineno)d:%(funcName)s] - %(message)s'
+log_format_full_path = '[%(asctime)s] [%(levelname)s] [%(pathname)s:%(lineno)d:%(funcName)s] %(message)s'
 # 2. 使用简短文件名 (更简洁)
-log_format_short_path = '%(asctime)s - [%(levelname)s] - [%(filename)s:%(lineno)d:%(funcName)s] - %(message)s'
+log_format_short_path = '[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)d:%(funcName)s] %(message)s'
 
 # 选择要使用的日志格式 (切换注释以更改格式)
 logging.basicConfig(
@@ -14,117 +15,4 @@ logging.basicConfig(
     # format=log_format_full_path  # 使用完整路径
     format=log_format_short_path  # 使用简短文件名
 )
-# PSI 类型映射表
-PSI_TYPE_MAP = {
-    0: "ECDH",  # ECDH PSI
-    1: "VOLE"   # VOLE PSI
-}
-
-# 曲线类型映射表
-CURVE_TYPE_MAP = {
-    0: "CURVE_INVALID_TYPE",
-    1: "CURVE_25519",
-    2: "CURVE_FOURQ",
-    3: "CURVE_SM2",
-    4: "CURVE_SECP256K1",
-    5: "CURVE_25519_ELLIGATOR2"
-}
-
-class PSIParty:
-    def __init__(self, taskid, role, psi_type=1, curve_type=1, address="localhost:50051", redis="localhost:6379", add_meta={},  sysectbits=112, log_dir=".", log_level=2,
-                 log_with_console=True, net_log_switch=False, server_output=True, use_redis=True, connect_wait_time=60000, chl_type='mem'):
-        self.taskid = taskid
-        self.address = address 
-        self.role = role #0:sender 1:receiver
-        self.redis = redis
-        self.psi_type = psi_type
-        self.curve_type = curve_type
-        self.sysectbits = sysectbits
-        self.log_dir = log_dir
-        self.log_level = log_level
-        self.net_log_switch = net_log_switch
-        self.add_meta = add_meta
-        self.log_with_console = log_with_console
-        self.server_output = server_output
-        self.use_redis = use_redis
-        self.chl_type = chl_type # mem or grpc
-        
-        # 记录 PSI 类型和曲线类型
-        psi_type_name = PSI_TYPE_MAP.get(self.psi_type, f"UNKNOWN({self.psi_type})")
-        curve_type_name = CURVE_TYPE_MAP.get(self.curve_type, f"UNKNOWN({self.curve_type})")
-        logging.info(f"Using PSI type: {psi_type_name} (type_id={self.psi_type}) curve_type={curve_type_name} (type_id={self.curve_type})")
-        
-        self.psi = Psi(self.role, self.taskid, self.address, self.redis,  self.psi_type, self.curve_type, self.sysectbits, self.log_dir, self.log_level, self.log_with_console, self.net_log_switch, self.server_output, self.use_redis, self.chl_type, connect_wait_time, add_meta)
-
-    def Run(self, role, input:List, fast_mode=True, malicious=False, broadcast_result=True):
-        # 获取 PSI 类型名称
-        psi_type_name = PSI_TYPE_MAP.get(self.psi_type, f"UNKNOWN({self.psi_type})")
-        logging.info(f'Running {psi_type_name} PSI with parameters: taskid={self.taskid}, role={self.role}, address={self.address}, redis={self.redis}')
-        logging.info(f'Input size: {len(input)}, fast_mode: {fast_mode}, malicious: {malicious}, broadcast_result: {broadcast_result}')
-
-        try:
-            result = self.psi.Run(role, input, fast_mode, malicious, broadcast_result)
-            logging.info(f'Finish {psi_type_name} PSI successfully!')
-            return result
-        except Exception as e:
-            logging.error(f'Error during {psi_type_name} PSI: {e}')
-            raise  # 重新抛出异常，确保错误不会被吞掉
-
-
-class Channel:
-    def __init__(self, role, taskid, chl_type="grpc", party="localhost:50051", redis="localhost:6379", 
-                 connect_wait_time=60000, use_redis=True, net_log_switch=False, meta={}):
-        """
-        初始化Channel通信对象
-        
-        Args:
-            role: 角色 (0: sender, 1: receiver)
-            taskid: 任务ID
-            chl_type: 通信类型 ("grpc" 或 "mem")
-            party: 对方地址
-            redis: Redis地址
-            connect_wait_time: 连接等待时间(毫秒)
-            use_redis: 是否使用Redis
-            net_log_switch: 是否开启网络日志
-            meta: 元数据字典
-        """
-        self.role = role
-        self.taskid = taskid
-        self.chl_type = chl_type
-        self.party = party
-        self.redis = redis
-        self.connect_wait_time = connect_wait_time
-        self.use_redis = use_redis
-        self.net_log_switch = net_log_switch
-        self.meta = meta
-        
-        logging.info(f"Initializing Channel: role={role}, taskid={taskid}, party={party}")
-        
-        # 创建底层C++对象
-        self._channel = _Channel(role, taskid, chl_type, party, redis, 
-                                connect_wait_time, use_redis, net_log_switch, meta)
-    
-    def send(self, message: str) -> bool:
-        """
-        发送消息
-        
-        Args:
-            message: 要发送的消息字符串
-            
-        Returns:
-            bool: 发送是否成功
-        """
-        logging.info(f"Sending message: {len(message)} bytes")
-        return self._channel.send(message)
-    
-    def recv(self) -> str:
-        """
-        接收消息
-        
-        Returns:
-            str: 接收到的消息字符串
-        """
-        message = self._channel.recv()
-        logging.info(f"Received message: {len(message)} bytes")
-        return message
     

@@ -12,19 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
-
 package(default_visibility = ["//visibility:public"])
 
-py_library(
-    name = "pyspl",
-    srcs = ["__init__.py"],
-    deps = [
-        "//pyspl/src:psi_lib",
-    ],
-    imports = ["."],
+py_test(
+    name = "vole_psi_test",
+    srcs = ["vole_psi_test.py"],
+    deps = ["//pyspl:pyspl"],
 )
 
+py_test(
+    name = "ecdh_psi_test",
+    srcs = ["ecdh_psi_test.py"],
+    deps = ["//pyspl:pyspl"],
+)
 
+py_test(
+    name = "channel_test",
+    srcs = ["channel_test.py"],
+    deps = ["//pyspl:pyspl"],
+)
