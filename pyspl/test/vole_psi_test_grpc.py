@@ -47,7 +47,7 @@ def run_vole_psi(role,party_id,psi_type,curve_type,size):
 
     addr, meta = ModelBase.get_connect_info_by_party_id(party_id)
     print(f'{party_id} addr: {addr}, meta: {meta}')
-
+    ctx=CreateChannel(role, taskid, chl_type, addr, redis_addr,)
     psi = PSIParty(taskid=taskid, role=role, psi_type=psi_type, curve_type=curve_type, address=addr, redis=redis_addr, add_meta=meta, chl_type=chl_type)
     
     # 生成测试数据

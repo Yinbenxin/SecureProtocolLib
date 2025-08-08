@@ -2,7 +2,7 @@ import multiprocessing
 import random
 import logging
 import json
-from pyspl import PSIParty
+from pyspl import PSIExecute, CreateChannel, PSIType, CurveType
 
 
 
@@ -15,40 +15,25 @@ def generate_test_data(size):
 
 def run_vole_psi(role):
     # 创建 VolePsi 实例
-    config = {
-        "taskid": "taskid",
-        "role": role,
-        "party": "localhost:50051",
-        "redis": "localhost:6379",
-        "psi_type": 0,
-        "curve_type": 4,
-        "sysectbits": 112,
-        "log_dir": ".",
-        "log_level": 2,
-        "log_with_console": True,
-        "net_log_switch": False,
-        "server_output": True,
-        "use_redis": True,
-        "connect_wait_time": 60000,
-        "chl_type": "mem",
-        "fast_mode": True,
-        "malicious": False,
-        "broadcast_result": True,
-        "meta": {}
-    }
+    config_json = f'''{{
+        "role": {role},
+        "psi_type": {PSIType.ECDH.value},
+        "curve_type": {CurveType.CURVE_25519.value},
+        "broadcast_result": true
+    }}'''
     
     logging.info(f"Python - 角色 {role} 开始初始化 PSIParty")
-    logging.info(f"Python - 配置: {config}")
-    config_str = json.dumps(config)
-    psi = PSIParty(config_json=config_str)
+    logging.info(f"Python - 配置: {config_json}")
+    ctx=CreateChannel(role, "psi_test", "mem")
+
     
     # 生成测试数据
-    input_data = generate_test_data(1000)
+    input_data = generate_test_data(1000000)
     logging.info(f"Python - 角色 {role} 生成了 {len(input_data)} 条测试数据")
     
     # 调用 Run 方法并获取结果
     logging.info(f"Python - 角色 {role} 开始运行 PSI")
-    result = psi.Run(input_data)
+    result = PSIExecute(ctx, config_json, input_data)
     logging.info(f"Python - 角色 {role} PSI 运行完成，结果数量: {len(result)}")
     
     # 打印结果

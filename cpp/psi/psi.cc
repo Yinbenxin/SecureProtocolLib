@@ -19,36 +19,30 @@
 #include "cpp/psi/volepsi/vole_psi.h"
 #include <algorithm>
 #include <stdexcept>
+#include <string>
+#include <vector>
 #include "fmt/format.h"
+#include "nlohmann/json.hpp"
 
 namespace psi {
 
-std::vector<std::string> Psi::Run(const std::vector<std::string>& input){
-    SPDLOG_INFO("[Psi] start");
-    SPDLOG_INFO("[Psi] input size: {}", input.size());
-    if (!input.empty()) {
-      SPDLOG_INFO("[Psi] input[0]: {}", input[0]);
-    }
-    switch (psi_type_) {
-      case 0: {
-        // ECDH PSI
-        ECDHPsi ecdh_psi(role_, taskid_, party_, redis_, psi_type_, curve_type_, sysectbits_,  log_dir_, 
-                        log_level_, log_with_console_, net_log_switch_, server_output_, 
-                        use_redis_, chl_type_,connect_wait_time_, meta_);
-        return ecdh_psi.Run(role_, input, fast_mode_, malicious_, broadcast_result_);
-      }
-      case 1: {
-        // VOLE PSI
-        VolePsi vole_psi(role_, taskid_, party_, redis_, psi_type_, sysectbits_,  log_dir_, 
-                        log_level_, log_with_console_, net_log_switch_, server_output_, 
-                        use_redis_, chl_type_,connect_wait_time_, meta_);
-        return vole_psi.Run(role_, input, fast_mode_, malicious_, broadcast_result_);
-      }
-      default: {
-        throw std::runtime_error("PSI type not supported: " + std::to_string(psi_type_));
-      }
+std::vector<std::string> PsiExecute(const std::shared_ptr<yacl::link::Context>& lctx,
+                                    const std::string& config_json,
+                                    const std::vector<std::string>& input) {
+    // json解析config_json
+    nlohmann::json config = nlohmann::json::parse(config_json);
+    // 从config中提取psi_type
+    int psi_protocol = config.value("psi_protocol", 0);
+    SPDLOG_INFO("[PsiExecute] psi_protocol: {}", psi_protocol);
+    if (psi_protocol == 0) {  // ECDH PSI
+        return ecdh_execute(lctx, config_json, input);
+    } else if (psi_protocol == 1) {  // VOLE PSI
+        return vole_execute(lctx, config_json, input); 
+    } else {
+        throw std::runtime_error("PSI type not supported: " + std::to_string(psi_protocol));
     }
 }
+
 
 }  // namespace psi
 

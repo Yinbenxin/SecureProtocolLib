@@ -1,6 +1,7 @@
 import multiprocessing
 import random
-from pyspl import PSIParty
+import logging
+from pyspl import PSIExecute, CreateChannel, PSIType, CurveType
 
 def generate_test_data(size):
     # 生成随机的 uint128 数据
@@ -11,18 +12,28 @@ def generate_test_data(size):
 
 def run_vole_psi(role):
     # 创建 VolePsi 实例
-    taskid = "taskid"
-    address = "localhost:50051"
-    redis = "localhost:6379"
-    psi_type=1
-    curve_type=1
-    psi = PSIParty(taskid, role, psi_type, curve_type, address, redis)
+    config_json = f'''{{
+        "role": {role},
+        "psi_protocol": {PSIType.VOLE.value},
+        "curve_type": {CurveType.CURVE_25519.value},
+        "sysectbits": 112,
+        "fast_mode": true,
+        "malicious": false,
+        "broadcast_result": true
+    }}'''
+    
+    logging.info(f"Python - 角色 {role} 开始初始化 PSIParty")
+    logging.info(f"Python - 配置: {config_json}")
+    ctx=CreateChannel(role, "psi_test", "mem")
     
     # 生成测试数据
-    input_data = generate_test_data(1000)
+    input_data = generate_test_data(1000000)
+    logging.info(f"Python - 角色 {role} 生成了 {len(input_data)} 条测试数据")
     
     # 调用 Run 方法并获取结果
-    result = psi.Run(role=role, input=input_data, fast_mode=True, malicious=False, broadcast_result=True)
+    logging.info(f"Python - 角色 {role} 开始运行 PSI")
+    result = PSIExecute(ctx, config_json, input_data)
+    logging.info(f"Python - 角色 {role} PSI 运行完成，结果数量: {len(result)}")
     
     # 打印结果
     print(f"Role {role} PSI result count: {len(result)}")
@@ -30,14 +41,21 @@ def run_vole_psi(role):
     return result
 
 if __name__ == '__main__':
+    logging.info("Python - ECDH PSI 测试开始")
+    
     # 创建两个进程，分别运行角色 0 和角色 1
+    logging.info("Python - 创建两个进程，分别运行角色 0 和角色 1")
     p0 = multiprocessing.Process(target=run_vole_psi, args=(0,))
     p1 = multiprocessing.Process(target=run_vole_psi, args=(1,))
     
     # 启动进程
+    logging.info("Python - 启动进程")
     p0.start()
     p1.start()
     
     # 等待进程结束
+    logging.info("Python - 等待进程结束")
     p0.join()
     p1.join()
+    
+    logging.info("Python - ECDH PSI 测试完成")

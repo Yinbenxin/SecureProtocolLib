@@ -68,6 +68,11 @@
         "complex": "cpp",
         "*.inc": "cpp",
         "strstream": "cpp",
-        "scoped_allocator": "cpp"
+        "scoped_allocator": "cpp",
+        "barrier": "cpp",
+        "latch": "cpp",
+        "semaphore": "cpp",
+        "algorithm": "cpp",
+        "*.tcc": "cpp"
     }
 }

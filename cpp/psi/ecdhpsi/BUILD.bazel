@@ -26,6 +26,7 @@ curve_cc_binary(
     srcs = ["ecdh_psi_test.cc"],
     deps = [
         ":ecdh_psi",
+        "//cpp/psi/utils:network_utils",
     ],
 )
 

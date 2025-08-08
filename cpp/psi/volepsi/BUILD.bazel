@@ -26,6 +26,7 @@ curve_cc_binary(
     srcs = ["volepsi_test.cc"],
     deps = [
         ":vole_psi",
+        "//cpp/psi/utils:network_utils",
     ],
 )
 

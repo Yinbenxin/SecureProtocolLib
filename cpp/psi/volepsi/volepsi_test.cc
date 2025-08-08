@@ -22,8 +22,12 @@
 #include <chrono>
 #include "spdlog/spdlog.h"
 #include "fmt/format.h"
+#include "nlohmann/json.hpp"
+#include "yacl/link/test_util.h"
+#include "yacl/link/context.h"
 
 #include "vole_psi.h"
+#include "cpp/psi/utils/network_utils.h"
 
 namespace {
 
@@ -41,64 +45,31 @@ std::vector<std::string> GenerateTestData(size_t size) {
   return data;
 }
 
-// 准备测试数据
-struct TestData {
-  std::vector<std::string> input_data;
-  std::string taskid;
-  std::string party;
-  std::string redis;
-  size_t sysectbits;
-  size_t psi_type;
-  std::string log_dir;
-  size_t log_level;
-  bool log_with_console;
-  bool net_log_switch;
-  bool server_output;
-  bool use_redis;
-  std::string chl_type;
-  size_t connect_wait_time;
-  std::map<std::string, std::string> meta;
-};
 
-// 准备测试环境和数据
-TestData PrepareTestData(size_t role, size_t data_size) {
-  TestData data;
-  data.taskid = "taskid";
-  data.party = "localhost:50051";
-  data.redis = "localhost:6379";
-  data.sysectbits = 112;
-  data.psi_type = 1;
-  data.log_dir = ".";
-  data.log_level = 2;
-  data.log_with_console = true;
-  data.net_log_switch = false;
-  data.server_output = true;
-  data.use_redis = true;
-  data.chl_type = "mem";
-  data.connect_wait_time = 60000;
-  data.meta = std::map<std::string, std::string>();
-  data.input_data = GenerateTestData(data_size);
-  
-  SPDLOG_INFO("Role {} prepared data size: {}", role, data.input_data.size());
-  return data;
-}
 
 // 运行 VolePsi
-void RunVolePsi(size_t role, const TestData& test_data) {
-  // 创建 VolePsi 实例
-  psi::VolePsi vole_psi(role, test_data.taskid, test_data.party, test_data.redis,
-                       test_data.psi_type, test_data.sysectbits,  test_data.log_dir,
-                       test_data.log_level, test_data.log_with_console, test_data.net_log_switch,
-                       test_data.server_output, test_data.use_redis, test_data.chl_type,
-                       test_data.connect_wait_time, test_data.meta);
+void RunVolePsi(size_t role, const std::vector<std::string>& test_data) {
+  // 创建配置JSON
+  nlohmann::json config;
+  config["role"] = role;
+  config["psi_protocol"] = 1;  // VOLE PSI
+  config["curve_type"] = 1;   // CURVE_25519
+  config["sysectbits"] = 112;
+  config["fast_mode"] = true;
+  config["malicious"] = false;
+  config["broadcast_result"] = true;
   
+  std::string config_json = config.dump();
+  
+  // 创建链接
+  auto ctx = psi::utils::Createlinks(role, "VOLE-PSI-test", "mem");
   SPDLOG_INFO("Role {} starting PSI computation...", role);
   
   // 开始计时
   auto start_time = std::chrono::high_resolution_clock::now();
   
-  // 调用 Run 方法并获取结果
-  auto result = vole_psi.Run(role, test_data.input_data, true, false, true);
+  // 调用 vole_execute 方法并获取结果
+  auto result = psi::vole_execute(ctx, config_json, test_data);
   
   // 结束计时
   auto end_time = std::chrono::high_resolution_clock::now();
@@ -129,35 +100,18 @@ int main() {
   SPDLOG_INFO("Preparing test data...");
   
   // 开始数据准备计时
-  auto prep_start_time = std::chrono::high_resolution_clock::now();
-  
-  // 先准备好双方的数据
-  TestData data0 = PrepareTestData(0,100000);
-  TestData data1 = PrepareTestData(1,100000);
-  
-  // 结束数据准备计时
-  auto prep_end_time = std::chrono::high_resolution_clock::now();
-  auto prep_duration = std::chrono::duration_cast<std::chrono::milliseconds>(prep_end_time - prep_start_time);
-  
-  SPDLOG_INFO("Data preparation completed in {} ms, starting PSI computation...", prep_duration.count());
-  
-  // 开始总体计时
-  auto total_start_time = std::chrono::high_resolution_clock::now();
+  std::vector<std::string> data0 = GenerateTestData(100000);
+  std::vector<std::string> data1 = GenerateTestData(100000);
   
   // 创建两个线程，分别运行角色 0 和角色 1 的PSI计算
-  std::thread t0(RunVolePsi, 0, std::ref(data0));
-  std::thread t1(RunVolePsi, 1, std::ref(data1));
+  std::thread t0(RunVolePsi, 0, std::cref(data0));
+  std::thread t1(RunVolePsi, 1, std::cref(data1));
   
   // 等待线程结束
   t0.join();
   t1.join();
   
-  // 结束总体计时
-  auto total_end_time = std::chrono::high_resolution_clock::now();
-  auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(total_end_time - total_start_time);
-  
   SPDLOG_INFO("PSI computation completed.");
-  SPDLOG_INFO("Total PSI execution time (including both parties): {} ms", total_duration.count());
   
   return 0;
 }

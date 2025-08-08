@@ -20,25 +20,20 @@
 
 namespace psi {
 
-std::vector<std::string> ECDHPsi::Run(size_t role, const std::vector<std::string>& input, bool fast_mode, bool malicious, bool broadcast_result){
-    SPDLOG_INFO("[ECDHPsi] start");
-    SPDLOG_INFO("[ECDHPsi] role: {}", role);
-    SPDLOG_INFO("[ECDHPsi] input size: {}", input.size());
-    SPDLOG_INFO("[ECDHPsi] fast mode: {}", fast_mode);
-    SPDLOG_INFO("[ECDHPsi] malicious: {}", malicious);
-    SPDLOG_INFO("[ECDHPsi] broadcast result: {}", broadcast_result);
-    
-  std::shared_ptr<yacl::link::Context> lctxs = utils::SetupGrpclinks(role_, taskid_, chl_type_, party_, redis_, 
-                               connect_wait_time_, use_redis_, net_log_switch_, meta_);
-  // 使用类成员变量curve_type_，它在构造函数中被初始化为传入的curve_type参数
-  // 通过static_cast将size_t类型的curve_type_转换为psi::CurveType枚举类型
-  psi::CurveType curve_type = static_cast<psi::CurveType>(curve_type_);
-  // 使用yacl::link::kAllRank作为target_rank，表示结果广播给所有参与方
-  std::vector<std::string> output = ecdh::RunEcdhPsi(lctxs, input, yacl::link::kAllRank, curve_type);
-  SPDLOG_INFO("[ECDHPsi] output size: {}", output.size());
-  return output;
-    
-};
+std::vector<std::string> ecdh_execute(const std::shared_ptr<yacl::link::Context>& lctx,
+                                      const std::string& config_json,
+                                      const std::vector<std::string>& input) {
+    // json解析config_json
+    nlohmann::json config = nlohmann::json::parse(config_json);
+    // 从config中提取psi_type
+    int curve_type = config.value("curve_type", 0);
+    SPDLOG_INFO("[ECDHPSI]  config_json: {}", config_json);
+    SPDLOG_INFO("[ECDHPSI]  START curve_type: {}", curve_type);
+    SPDLOG_INFO("[ECDHPSI]  input size: {}, input[0]: {}", input.size(), input[0]);
+    std::vector<std::string> output = ecdh::RunEcdhPsi(lctx, input, yacl::link::kAllRank, static_cast<psi::CurveType>(curve_type));
+    SPDLOG_INFO("[ECDHPSI]  END output size: {}", output.size());
+    return output;
 
 };
 
+}

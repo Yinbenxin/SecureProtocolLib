@@ -15,7 +15,7 @@ import random
 import string
 
 from pyspl import PSIParty
-from pyspl import Channel
+from pyspl import CreateChannel
 import logging
 
 def generate_test_data(size):
@@ -51,9 +51,8 @@ def channel_test(role, party_id, taskid):
 
     logging.info(f'{party_id} redis: {redis}, address: {address}, meta: {meta}')
     logging.info(f"Starting channel test with role {role}")
-    
     # 创建通信通道
-    channel = Channel(
+    channel = CreateChannel(
         role=role,
         taskid=taskid,
         party=address,

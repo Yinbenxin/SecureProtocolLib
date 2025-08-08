@@ -1,7 +1,6 @@
 import logging
-from pyspl.src.psi import PSIParty
-from pyspl.src.channel import Channel
-
+from pyspl.src.libpsi import CreateChannel
+from pyspl.src.psi import  *
 # 配置日志
 # 日志格式选项：
 # 1. 使用完整路径 (默认，便于在IDE中直接点击跳转)
