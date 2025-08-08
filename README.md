@@ -2,7 +2,7 @@
 
 ## 简介
 
-SecureProtocolLib是一个基于[隐语（PSI）](https://github.com/secretflow/psi)和其他开源库开发的安全协议库，主要提供隐私集合求交（PSI）和隐私信息检索（PIR）功能。该库同时支持C++和Python接口，方便在不同场景下使用。
+SecureProtocolLib是一个基于其他开源库开发的安全协议库，主要提供隐私集合求交（PSI）和隐私信息检索（PIR）功能。该库同时支持C++和Python接口，方便在不同场景下使用。
 
 ## 功能特点
 
@@ -24,7 +24,7 @@ SecureProtocolLib是一个基于[隐语（PSI）](https://github.com/secretflow/
 ### 依赖项
 
 - Bazel 6.0.0 或更高版本
-- Python 3.6 或更高版本
+- Python 3.8 或更高版本
 - C++17 兼容的编译器
 
 ### 从源码构建
@@ -52,8 +52,6 @@ pip install pyspl
 
 ## 依赖
 
-- [PSI (Private Set Intersection)](https://github.com/secretflow/psi) - 隐语PSI库
-- [YACL (Yet Another Cryptography Library)](https://github.com/secretflow/yacl) - 密码学基础库
 - [spdlog](https://github.com/gabime/spdlog) - 高性能日志库
 - [fmt](https://github.com/fmtlib/fmt) - 格式化库
 - [pybind11](https://github.com/pybind/pybind11) - C++/Python绑定库
