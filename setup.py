@@ -26,7 +26,7 @@ class BazelBuildExt(build_ext):
     def build_extension(self, ext):
         if not isinstance(ext, BazelExtension):
             super().build_extension(ext)
-            return
+            returns
 
         # 确保输出目录存在
         os.makedirs(self.build_temp, exist_ok=True)
@@ -42,7 +42,7 @@ class BazelBuildExt(build_ext):
         # 找到构建的.so文件并复制到正确的位置
         bazel_bin_dir = os.path.join(
             os.path.abspath(os.path.dirname(__file__)),
-            'bazel-bin', 'pyspl'
+            'bazel-bin', 'pyspl', 'src'
         )
         
         # 根据操作系统确定扩展名
@@ -53,9 +53,9 @@ class BazelBuildExt(build_ext):
         else:  # Linux和其他类Unix系统
             ext_suffix = '.so'
             
-        # 复制libvolepsi.so到目标目录
+        # 复制libpsi.so到目标目录
         src_file = os.path.join(bazel_bin_dir, 'libpsi' + ext_suffix)
-        dst_file = os.path.join(extdir, 'libpsi' + ext_suffix)
+        dst_file = os.path.join(extdir, 'src', 'libpsi' + ext_suffix)
         
         if os.path.exists(src_file):
             self.copy_file(src_file, dst_file)
@@ -77,7 +77,7 @@ setup(
     ],
     python_requires=">=3.6",
     # 修改这一行，使用正确的目标名称
-    ext_modules=[BazelExtension("pyspl.libpsi", "//pyspl:libpsi_so")],
+    ext_modules=[BazelExtension("pyspl.libpsi", "//pyspl/src:libpsi_so")],
     cmdclass={
         'build_ext': BazelBuildExt,
     },
