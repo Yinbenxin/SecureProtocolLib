@@ -16,7 +16,7 @@ curve_cc_library(
         "@psi//psi/rr22:rr22_psi",
         "@yacl//yacl/crypto/rand",
         "@yacl//yacl/link:context",
-        "//cpp/psi/utils:network_utils",
+        "//cpp/tools/network:network_utils",
     ],
 )
 
@@ -26,7 +26,6 @@ curve_cc_binary(
     srcs = ["volepsi_test.cc"],
     deps = [
         ":vole_psi",
-        "//cpp/psi/utils:network_utils",
     ],
 )
 

@@ -22,33 +22,27 @@
 #include <mutex>
 #include <random>
 #include <tuple>
+#include <map>
 #include "nlohmann/json.hpp"
-
 #include "spdlog/spdlog.h"
 #include "fmt/format.h"
+#include "yacl/crypto/rand/rand.h"
+#include "yacl/crypto/tools/prg.h"
+#include "yacl/link/test_util.h"
 #include "yacl/link/context.h"
-#include "cpp/tools/logs/log_config.h"
-// 定义 PSI 类型
-// enum PsiType {
-//   ECDHPSI = 0,
-//   RR22 = 1,
-// };
-// enum CurveType {
+#include "yacl/base/exception.h"
+#include "psi/circuit/circuit_psi.h"
+#include "cpp/tools/network/network_utils.h"
+// curve_type：
 // CURVE_25519 = 1,
 // CURVE_FOURQ = 2,
 // CURVE_SM2 = 3,
 // CURVE_SECP256K1 = 4,
-// };
-
 namespace psi {
 
-std::vector<std::string> PsiExecute(const std::shared_ptr<yacl::link::Context>& lctx,
-                                    const std::string& config_json,
-                                    const std::vector<std::string>& input);
-std::vector<std::vector<int64_t>> LabelPsiExecute(const std::shared_ptr<yacl::link::Context>& lctx,
-                                    const std::string& config_json,
-                                    const std::vector<std::string>& id, 
-                                    const std::vector<std::vector<int64_t>>& label);
+std::vector<std::vector<int64_t>> circuit_execute(const std::shared_ptr<yacl::link::Context>& lctx,
+                                      const std::string& config_json,
+                                      const std::vector<std::string>& id, 
+                                      const std::vector<std::vector<int64_t>>& data);
+
 }  // namespace psi
-
-

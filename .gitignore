@@ -1,0 +1,27 @@
+# Bazel build outputs
+bazel-bin/
+bazel-out/
+bazel-testlogs/
+bazel-*
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE files
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# CSV output files
+*.csv

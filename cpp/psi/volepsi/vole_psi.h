@@ -33,7 +33,7 @@
 #include "psi/rr22/rr22_psi.h"
 #include "psi/rr22/rr22_utils.h"
 #include "psi/utils/hash_bucket_cache.h"
-#include "cpp/psi/utils/network_utils.h"
+#include "cpp/tools/network/network_utils.h"
 namespace psi {
 
 std::vector<std::string> vole_execute(const std::shared_ptr<yacl::link::Context>& lctx,

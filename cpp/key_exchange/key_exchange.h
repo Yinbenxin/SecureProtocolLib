@@ -22,16 +22,19 @@
 #include <mutex>
 #include <random>
 #include <tuple>
+#include <map>
 #include "nlohmann/json.hpp"
 
 #include "spdlog/spdlog.h"
 #include "fmt/format.h"
+#include "yacl/crypto/rand/rand.h"
+#include "yacl/crypto/tools/prg.h"
+#include "yacl/link/test_util.h"
 #include "yacl/link/context.h"
 #include "cpp/tools/logs/log_config.h"
 // 定义 PSI 类型
-// enum PsiType {
+// enum KEType {
 //   ECDHPSI = 0,
-//   RR22 = 1,
 // };
 // enum CurveType {
 // CURVE_25519 = 1,
@@ -40,15 +43,15 @@
 // CURVE_SECP256K1 = 4,
 // };
 
-namespace psi {
+namespace ke {
 
-std::vector<std::string> PsiExecute(const std::shared_ptr<yacl::link::Context>& lctx,
+std::vector<std::string> KEExecute(const std::shared_ptr<yacl::link::Context>& lctx,
                                     const std::string& config_json,
-                                    const std::vector<std::string>& input);
-std::vector<std::vector<int64_t>> LabelPsiExecute(const std::shared_ptr<yacl::link::Context>& lctx,
-                                    const std::string& config_json,
-                                    const std::vector<std::string>& id, 
-                                    const std::vector<std::vector<int64_t>>& label);
-}  // namespace psi
+                                    size_t key_exchange_size);
+// 使用新的日志配置模块
+using spl::logging::setup_rotating_file_logger;
+using spl::logging::LogConfig;
+                                    
+}  // namespace ke
 
 

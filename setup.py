@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
+from setuptools.command.sdist import sdist
 import os
 import subprocess
 import sys
@@ -53,14 +54,27 @@ class BazelBuildExt(build_ext):
         else:  # Linux和其他类Unix系统
             ext_suffix = '.so'
             
-        # 复制libpsi.so到目标目录
-        src_file = os.path.join(bazel_bin_dir, 'libpsi' + ext_suffix)
-        dst_file = os.path.join(extdir, 'src', 'libpsi' + ext_suffix)
+        # 复制spllib.so到目标目录
+        src_file = os.path.join(bazel_bin_dir, 'spllib' + ext_suffix)
+        dst_file = os.path.join(extdir, 'src', 'spllib' + ext_suffix)
         
         if os.path.exists(src_file):
             self.copy_file(src_file, dst_file)
         else:
             raise RuntimeError(f"找不到构建的扩展文件: {src_file}")
+class CustomSdist(sdist):
+    """自定义sdist命令，构建完成后删除tar.gz文件"""
+    def run(self):
+        # 执行原始的sdist命令
+        super().run()
+        
+        # 删除生成的tar.gz文件
+        dist_dir = os.path.join(os.path.dirname(__file__), 'dist')
+        tar_gz_file = os.path.join(dist_dir, 'pyspl-0.1.0.tar.gz')
+        
+        if os.path.exists(tar_gz_file):
+            os.remove(tar_gz_file)
+            print(f"已删除文件: {tar_gz_file}")
 
 setup(
     name="pyspl",
@@ -77,9 +91,10 @@ setup(
     ],
     python_requires=">=3.6",
     # 修改这一行，使用正确的目标名称
-    ext_modules=[BazelExtension("pyspl.libpsi", "//pyspl/src:libpsi_so")],
+    ext_modules=[BazelExtension("pyspl.spllib", "//pyspl/src:spllib_so")],
     cmdclass={
         'build_ext': BazelBuildExt,
+        'sdist': CustomSdist,
     },
     install_requires=[
         # 添加依赖项

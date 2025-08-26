@@ -4,18 +4,16 @@ load("//bazel:curve.bzl", "curve_cc_binary", "curve_cc_library", "curve_cc_test"
 package(default_visibility = ["//visibility:public"])
 
 curve_cc_library(
-    name = "psi",
-    srcs = ["psi.cc"],
-    hdrs = ["psi.h"],
+    name = "key_exchange",
+    srcs = ["key_exchange.cc"],
+    hdrs = ["key_exchange.h"],
     linkopts = select({
     "@platforms//os:windows": ["/FORCE:UNRESOLVED"],
     "@platforms//os:linux": ["-static-libstdc++", "-static-libgcc"],
     "//conditions:default": [],
     }),
     deps = [
-        "//cpp/psi/volepsi:vole_psi",
-        "//cpp/psi/ecdhpsi:ecdh_psi",
-        "//cpp/psi/circuit_psi:circuit_psi",
+        "//cpp/key_exchange/ecdhke:ecdh_ke",
         "//cpp/tools/logs:log_configs",
         "@com_github_nlohmann_json//:json",
     ],

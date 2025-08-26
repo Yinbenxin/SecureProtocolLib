@@ -14,28 +14,28 @@
 
 
 
-#include "ecdh_psi.h"
+#include "cpp/key_exchange/ecdhke/ecdh_ke.h"
 #include <algorithm>
 #include "fmt/format.h"
 
-namespace psi {
-
-std::vector<std::string> ecdh_execute(const std::shared_ptr<yacl::link::Context>& lctx,
+namespace ke {
+std::vector<std::string> ecdhke_execute(const std::shared_ptr<yacl::link::Context>& lctx,
                                       const std::string& config_json,
-                                      const std::vector<std::string>& input) {
+                                      size_t key_exchange_size) {
     // json解析config_json
     nlohmann::json config = nlohmann::json::parse(config_json);
     // 从config中提取psi_type
-    int curve_type = config.value("curve_type", 0);
+    size_t curve_type = config.value("curve_type", 0);
     size_t batch_size = config.value("batch_size", 4096);
-    SPDLOG_INFO("[ECDHPSI]  config_json: {}", config_json);
-    SPDLOG_INFO("[ECDHPSI]  START curve_type: {}", curve_type);
-    SPDLOG_INFO("[ECDHPSI]  batch_size: {}", batch_size);
-    SPDLOG_INFO("[ECDHPSI]  input size: {}, input[0]: {}", input.size(), input[0]);
-    std::vector<std::string> output = ecdh::RunEcdhPsi(lctx, input, yacl::link::kAllRank, static_cast<psi::CurveType>(curve_type), batch_size);
-    SPDLOG_INFO("[ECDHPSI]  END output size: {}", output.size());
-    return output;
+    SPDLOG_INFO("[ECDHKE]  config_json: {}", config_json);
+    SPDLOG_INFO("[ECDHKE]  START curve_type: {}", curve_type);
+    SPDLOG_INFO("[ECDHKE]  batch_size: {}", batch_size);
+    SPDLOG_INFO("[ECDHKE]  key_exchange_size: {}", key_exchange_size);
 
-};
+    std::vector<std::string> raw_output = psi::ecdhke::RunEcdhKe(lctx, key_exchange_size, yacl::link::kAllRank, static_cast<psi::CurveType>(curve_type), batch_size);
+    
+    SPDLOG_INFO("[ECDHKE]  END output size: {}", raw_output.size());
+    return raw_output;
 
-}
+}  
+}// namespace ke

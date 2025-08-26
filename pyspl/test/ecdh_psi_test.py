@@ -3,7 +3,7 @@ import random
 import logging
 import json
 from pyspl import PSIExecute, CreateChannel, PSIType, CurveType
-
+from pyspl import PSIExecute, CreateChannel, PSIType, CurveType
 
 
 def generate_test_data(size):
@@ -13,13 +13,13 @@ def generate_test_data(size):
     random.seed(0)
     return [str(random.randint(0, 2**64-1)) for _ in range(size)]
 
-def run_vole_psi(role):
+def run_ecdh_psi(role):
     # 创建 VolePsi 实例
     config_json = f'''{{
         "role": {role},
         "psi_type": {PSIType.ECDH.value},
         "curve_type": {CurveType.CURVE_25519.value},
-        "broadcast_result": true
+        "log_dir": "spllogs/ecdh.log"
     }}'''
     
     logging.info(f"Python - 角色 {role} 开始初始化 PSIParty")
@@ -28,7 +28,7 @@ def run_vole_psi(role):
 
     
     # 生成测试数据
-    input_data = generate_test_data(1000000)
+    input_data = generate_test_data(10000)
     logging.info(f"Python - 角色 {role} 生成了 {len(input_data)} 条测试数据")
     
     # 调用 Run 方法并获取结果
@@ -46,8 +46,8 @@ if __name__ == '__main__':
     
     # 创建两个进程，分别运行角色 0 和角色 1
     logging.info("Python - 创建两个进程，分别运行角色 0 和角色 1")
-    p0 = multiprocessing.Process(target=run_vole_psi, args=(0,))
-    p1 = multiprocessing.Process(target=run_vole_psi, args=(1,))
+    p0 = multiprocessing.Process(target=run_ecdh_psi, args=(0,))
+    p1 = multiprocessing.Process(target=run_ecdh_psi, args=(1,))
     
     # 启动进程
     logging.info("Python - 启动进程")

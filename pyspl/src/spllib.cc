@@ -2,7 +2,8 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "cpp/psi/psi.h"
-#include "cpp/psi/utils/network_utils.h"
+#include "cpp/key_exchange/key_exchange.h"
+#include "cpp/tools/network/network_utils.h"
 #include "yacl/base/buffer.h"
 #include <cstddef>
 #include <string>
@@ -14,11 +15,17 @@ namespace py = pybind11;
 #define NO_GIL py::call_guard<py::gil_scoped_release>()
 #define PY_CALL_TAG "python_call"
 
-PYBIND11_MODULE(libpsi, m) {
-
+PYBIND11_MODULE(spllib, m) {
+  m.doc() = "Secure Protocol Library";
 
   m.def("psi_execute", &psi::PsiExecute, "psi execute", py::arg("config"),
         py::arg("lctx"), py::arg("input"), NO_GIL);
+
+  m.def("label_psi_execute", &psi::LabelPsiExecute, "label psi execute", py::arg("config"),
+        py::arg("lctx"), py::arg("id"), py::arg("label"), NO_GIL);
+  
+  m.def("ke_execute", &ke::KEExecute, "key exchange execute", py::arg("config"),
+        py::arg("lctx"), py::arg("key_exchange_size"), NO_GIL);
 
   // 绑定Context类
   py::class_<yacl::link::Context, std::shared_ptr<yacl::link::Context>>(m, "Context", "the link handle")

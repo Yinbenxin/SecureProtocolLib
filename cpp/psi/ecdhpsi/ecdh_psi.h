@@ -32,7 +32,7 @@
 #include "yacl/link/context.h"
 #include "yacl/base/exception.h"
 #include "psi/ecdh/ecdh_psi.h"
-#include "cpp/psi/utils/network_utils.h"
+#include "cpp/tools/network/network_utils.h"
 // curve_type：
 // CURVE_25519 = 1,
 // CURVE_FOURQ = 2,

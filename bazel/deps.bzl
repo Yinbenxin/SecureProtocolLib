@@ -8,8 +8,8 @@ def _psi():
         http_archive,
         name = "psi",
         urls = [
-            "https://github.com/Yinbenxin/psi/archive/refs/tags/gaia2.1.tar.gz",
+                "https://github.com/Yinbenxin/psi/archive/refs/tags/gaia_2.3.tar.gz",
         ],
-        strip_prefix = "psi-gaia2.1",
-        sha256 = "6fc7f30b410a23b5c79e3d59a8091952a5f3dd06f1068bc017ff2eb284983a78",
+        strip_prefix = "psi-gaia_2.3",
+        sha256 = "af87eb40613315617846cf98554fff71e0e4f5fe67b797a49aebf2c5f4f1fc12",
     )

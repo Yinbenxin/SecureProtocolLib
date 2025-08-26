@@ -1,33 +1,19 @@
 
 image: $REGISTRY_URL/tensor_images/spu_tensor_amd64:v0.1.0
 
+# image: $REGISTRY_URL/tensor_images/spu_tensor_arm64:v0.1.0 
+# 构建arm64镜像失败，k8s不支持arm64架构。手动打包上传吧～
 
 variables:
   APP_NAME: secure_protocol_lib
 
 before_script:
-  - mkdir -p ~/.pip
-  - echo [global] > ~/.pip/pip.conf
-  - echo index-url = https://mirrors.aliyun.com/pypi/simple/ >> ~/.pip/pip.conf
-  - pip install devpi-client==5.0.0
   - devpi use $DEVPI_URL
   - devpi login $DEVPI_USERNAME --password=$DEVPI_PASSWORD
  
 stages:
-  - test
   - build
 
-test:
-  stage: test
-  script:
-    - echo mock make test
-  only:
-    - dev
-    - master
-    - /^release\/.*$/
-    - tags
-  tags:
-    - k8s-ci
 
 build-dev:
   stage: build
@@ -52,6 +38,7 @@ build-release:
     - devpi upload --from-dir dist
   only:
     - tags
+    - master
   tags:
     - k8s-ci
 

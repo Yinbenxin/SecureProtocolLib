@@ -16,8 +16,8 @@ load("@rules_python//python:defs.bzl", "py_library", "py_test")
 package(default_visibility = ["//visibility:public"])
 
 py_test(
-    name = "vole_psi_test",
-    srcs = ["vole_psi_test.py"],
+    name = "psi_test",
+    srcs = ["psi_test.py"],
     deps = ["//pyspl:pyspl"],
 )
 
@@ -28,7 +28,19 @@ py_test(
 )
 
 py_test(
+    name = "ecdh_ke_test",
+    srcs = ["ecdh_ke_test.py"],
+    deps = ["//pyspl:pyspl"],
+)
+
+py_test(
     name = "channel_test",
     srcs = ["channel_test.py"],
+    deps = ["//pyspl:pyspl"],
+)
+
+py_test(
+    name = "circuit_psi_test",
+    srcs = ["circuit_psi_test.py"],
     deps = ["//pyspl:pyspl"],
 )

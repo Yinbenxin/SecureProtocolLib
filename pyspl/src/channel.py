@@ -1,2 +1,2 @@
 import logging
-from .libpsi import CreateGrpclinks
+from .spllib import CreateGrpclinks

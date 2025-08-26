@@ -4,16 +4,16 @@ load("//bazel:curve.bzl", "curve_cc_binary", "curve_cc_library", "curve_cc_test"
 package(default_visibility = ["//visibility:public"])
 
 curve_cc_library(
-    name = "ecdh_psi",
-    srcs = ["ecdh_psi.cc"],
-    hdrs = ["ecdh_psi.h"],
+    name = "circuit_psi",
+    srcs = ["circuit_psi.cc"],
+    hdrs = ["circuit_psi.h"],
     linkopts = select({
         "@platforms//os:windows": ["/FORCE:UNRESOLVED"],
         "@platforms//os:linux": ["-static-libstdc++", "-static-libgcc"],
         "//conditions:default": [],
     }),
     deps = [
-        "@psi//psi/ecdh:ecdh_psi",
+        "@psi//psi/circuit:circuit_psi",
         "@yacl//yacl/crypto/rand",
         "@yacl//yacl/link:context",
         "//cpp/tools/network:network_utils",
@@ -22,10 +22,10 @@ curve_cc_library(
 
 
 curve_cc_binary(
-    name = "ecdh_psi_test",
-    srcs = ["ecdh_psi_test.cc"],
+    name = "circuit_psi_test",
+    srcs = ["circuit_psi_test.cc"],
     deps = [
-        ":ecdh_psi",
+        ":circuit_psi",
     ],
 )
 
