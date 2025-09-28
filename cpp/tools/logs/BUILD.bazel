@@ -1,0 +1,13 @@
+load("@yacl//bazel:yacl.bzl", "AES_COPT_FLAGS")
+load("//bazel:curve.bzl", "curve_cc_binary", "curve_cc_library", "curve_cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+curve_cc_library(
+    name = "log_configs",
+    srcs = ["log_config.cc"],
+    hdrs = ["log_config.h"],
+    deps = [
+         "@yacl//yacl/link:context",
+    ],
+)

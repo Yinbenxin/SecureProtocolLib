@@ -19,27 +19,36 @@ load("@rules_python//python:defs.bzl", "py_library", "py_test")
 package(default_visibility = ["//visibility:public"])
 
 pybind_extension(
-    name = "libpsi",
-    srcs = ["libpsi.cc"],
+    name = "spllib",
+    srcs = ["spllib.cc"],
     linkopts = select({
         "@platforms//os:windows": ["/FORCE:UNRESOLVED"],
-        "@platforms//os:linux": ["-static-libstdc++", "-static-libgcc"],
-        "//conditions:default": [],
+        "@platforms//os:linux": [
+            "-static-libstdc++",
+            "-static-libgcc",
+            "-Wl,--allow-multiple-definition",
+            "-Wl,-rpath,$$ORIGIN",
+            "-Wl,-rpath,$$ORIGIN/.libs",
+            # 注意：不再强制静态链接 libgomp，避免 gold 报错
+        ],
+        "//conditions:default": ["-Wl,-multiply_defined,suppress"],
     }),
     deps = [
         "//cpp/psi:psi",
+        "//cpp/key_exchange:key_exchange",
+        "//cpp/tools/network:network_utils",
     ],
 )
 
 py_library(
-    name = "psi_lib",
-    srcs = ["channel.py", "psi.py"],  # 添加一个空的__init__.py文件
-    data = [":libpsi.so"],  # 使用.so扩展名
+    name = "spllib_lib",
+    srcs = ["channel.py", "psi.py", "key_exchange.py"],  # 添加一个空的__init__.py文件
+    data = [":spllib.so"],  # 使用.so扩展名
     imports = ["."],
 )
 
-# 添加一个别名目标，使 libpsi.so 可以被直接引用
+# 添加一个别名目标，使 spllib.so 可以被直接引用
 filegroup(
-    name = "libpsi_so",
-    srcs = [":libpsi.so"],
+    name = "spllib_so",
+    srcs = [":spllib.so"],
 )

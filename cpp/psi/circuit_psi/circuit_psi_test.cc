@@ -26,50 +26,48 @@
 #include "yacl/link/test_util.h"
 #include "yacl/link/context.h"
 
-#include "vole_psi.h"
-#include "cpp/psi/utils/network_utils.h"
-
+#include "circuit_psi.h"
+#include "cpp/tools/network/network_utils.h"
 namespace {
 
 // 生成随机的测试数据
-std::vector<std::string> GenerateTestData(size_t size) {
+void GenerateTestData(size_t size_id, size_t size_data, std::vector<std::string>& id, std::vector<std::vector<int64_t>>& data) {
   // 生成随机的 uint64 数据
   // 确保生成的数字在合理范围内
-  std::vector<std::string> data;
+  
   std::mt19937_64 rng(0);  // 使用固定种子 0，与 Python 版本一致
-  
-  for (size_t i = 0; i < size; ++i) {
-    data.push_back(std::to_string(rng() % (1ULL << 63)));
+  id.reserve(size_id);
+  data.reserve(size_data);
+  for (size_t i = 0; i < size_id; ++i) {
+    id.push_back(std::to_string(rng() % (1ULL << 63)));
+    data.push_back(std::vector<int64_t>());
+    for (size_t j = 0; j < size_data; ++j)
+    {
+      data[i].push_back(j);
+    }
+    
   }
-  
-  return data;
 }
 
 
-
-// 运行 VolePsi
-void RunVolePsi(size_t role, const std::vector<std::string>& test_data) {
+// 运行 CircuitPSI
+void RunCircuitPSI(size_t role, const std::vector<std::string>& id, const std::vector<std::vector<int64_t>>& data) {
   // 创建配置JSON
   nlohmann::json config;
   config["role"] = role;
-  config["psi_protocol"] = 1;  // VOLE PSI
   config["curve_type"] = 1;   // CURVE_25519
-  config["sysectbits"] = 112;
-  config["fast_mode"] = true;
-  config["malicious"] = false;
-  config["broadcast_result"] = true;
   
   std::string config_json = config.dump();
   
   // 创建链接
-  auto ctx = psi::utils::Createlinks(role, "VOLE-PSI-test", "mem");
+  auto ctx = psi::utils::Createlinks(role, "circuit-PSI-test", "mem");
   SPDLOG_INFO("Role {} starting PSI computation...", role);
   
   // 开始计时
   auto start_time = std::chrono::high_resolution_clock::now();
   
-  // 调用 vole_execute 方法并获取结果
-  auto result = psi::vole_execute(ctx, config_json, test_data);
+  // 调用 circuit_execute 方法并获取结果
+  std::vector<std::vector<int64_t>> result = psi::circuit_execute(ctx, config_json, id, data);
   
   // 结束计时
   auto end_time = std::chrono::high_resolution_clock::now();
@@ -85,7 +83,7 @@ void RunVolePsi(size_t role, const std::vector<std::string>& test_data) {
   size_t count = std::min(result.size(), size_t(5));
   std::string results_str;
   for (size_t i = 0; i < count; ++i) {
-    results_str += result[i];
+    results_str += fmt::format("{}: {}", result[i][0], result[i][1]);
     if (i < count - 1) {
       results_str += ", ";
     }
@@ -100,12 +98,15 @@ int main() {
   SPDLOG_INFO("Preparing test data...");
   
   // 开始数据准备计时
-  std::vector<std::string> data0 = GenerateTestData(100000);
-  std::vector<std::string> data1 = GenerateTestData(100000);
-  
+  std::vector<std::string> id0;
+  std::vector<std::vector<int64_t>> data0;
+  GenerateTestData(1000, 100, id0, data0);
+  std::vector<std::string> id1;
+  std::vector<std::vector<int64_t>> data1;
+  GenerateTestData(1000, 100, id1, data1);
   // 创建两个线程，分别运行角色 0 和角色 1 的PSI计算
-  std::thread t0(RunVolePsi, 0, std::cref(data0));
-  std::thread t1(RunVolePsi, 1, std::cref(data1));
+  std::thread t0(RunCircuitPSI, 0, std::cref(id0), std::cref(data0));
+  std::thread t1(RunCircuitPSI, 1, std::cref(id1), std::cref(data1));
   
   // 等待线程结束
   t0.join();

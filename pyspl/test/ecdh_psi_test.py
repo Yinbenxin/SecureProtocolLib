@@ -1,8 +1,9 @@
 import multiprocessing
 import random
 import logging
-from pyspl import PSIParty
-
+import json
+from pyspl import PSIExecute, CreateChannel, PSIType, CurveType
+from pyspl import PSIExecute, CreateChannel, PSIType, CurveType
 
 
 def generate_test_data(size):
@@ -12,26 +13,27 @@ def generate_test_data(size):
     random.seed(0)
     return [str(random.randint(0, 2**64-1)) for _ in range(size)]
 
-def run_vole_psi(role):
+def run_ecdh_psi(role):
     # 创建 VolePsi 实例
-    taskid = "taskid"
-    address = "localhost:50051"
-    redis = "localhost:6379"
-    psi_type=0
-    curve_type=4
+    config_json = f'''{{
+        "role": {role},
+        "psi_type": {PSIType.ECDH.value},
+        "curve_type": {CurveType.CURVE_25519.value},
+        "log_dir": "spllogs/ecdh.log"
+    }}'''
     
     logging.info(f"Python - 角色 {role} 开始初始化 PSIParty")
-    logging.info(f"Python - 参数: taskid={taskid}, address={address}, redis={redis}, psi_type={psi_type}, curve_type={curve_type}")
-    
-    psi = PSIParty(taskid, role, psi_type, curve_type, address, redis)
+    logging.info(f"Python - 配置: {config_json}")
+    ctx=CreateChannel(role, "psi_test", "mem")
+
     
     # 生成测试数据
-    input_data = generate_test_data(1000)
+    input_data = generate_test_data(10000)
     logging.info(f"Python - 角色 {role} 生成了 {len(input_data)} 条测试数据")
     
     # 调用 Run 方法并获取结果
     logging.info(f"Python - 角色 {role} 开始运行 PSI")
-    result = psi.Run(role=role, input=input_data, fast_mode=True, malicious=False, broadcast_result=True)
+    result = PSIExecute(ctx, config_json, input_data)
     logging.info(f"Python - 角色 {role} PSI 运行完成，结果数量: {len(result)}")
     
     # 打印结果
@@ -44,8 +46,8 @@ if __name__ == '__main__':
     
     # 创建两个进程，分别运行角色 0 和角色 1
     logging.info("Python - 创建两个进程，分别运行角色 0 和角色 1")
-    p0 = multiprocessing.Process(target=run_vole_psi, args=(0,))
-    p1 = multiprocessing.Process(target=run_vole_psi, args=(1,))
+    p0 = multiprocessing.Process(target=run_ecdh_psi, args=(0,))
+    p1 = multiprocessing.Process(target=run_ecdh_psi, args=(1,))
     
     # 启动进程
     logging.info("Python - 启动进程")

@@ -1,0 +1,44 @@
+
+image: $REGISTRY_URL/tensor_images/spu_tensor_amd64:v0.1.0
+
+# image: $REGISTRY_URL/tensor_images/spu_tensor_arm64:v0.1.0 
+# 构建arm64镜像失败，k8s不支持arm64架构。手动打包上传吧～
+
+variables:
+  APP_NAME: secure_protocol_lib
+
+before_script:
+  - devpi use $DEVPI_URL
+  - devpi login $DEVPI_USERNAME --password=$DEVPI_PASSWORD
+ 
+stages:
+  - build
+
+
+build-dev:
+  stage: build
+  script:
+    - devpi use root/dev/+simple/
+    - python setup.py sdist bdist_wheel
+    - devpi upload --from-dir dist
+    
+  only:
+    - dev
+    - master
+    - /^release\/.*$/
+
+  tags:
+    - k8s-ci
+
+build-release:
+  stage: build
+  script:
+    - devpi use root/release/+simple/
+    - python setup.py sdist bdist_wheel
+    - devpi upload --from-dir dist
+  only:
+    - tags
+  tags:
+    - k8s-ci
+
+    

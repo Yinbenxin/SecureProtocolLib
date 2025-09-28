@@ -53,7 +53,7 @@ int GetAvailablePort() {
 }
 
 // 设置GRPC链接的函数
-std::shared_ptr<yacl::link::Context> SetupGrpclinks(
+std::shared_ptr<yacl::link::Context> Createlinks(
     size_t role,
     const std::string& taskid,
     const std::string& chl_type,
@@ -89,29 +89,6 @@ std::shared_ptr<yacl::link::Context> SetupGrpclinks(
   lctx->add_gaia_net(taskid, chl_type, party, redis, connect_wait_time, use_redis, net_log_switch, meta);
   return lctx;
 }
-
-
-channel::channel(size_t role, std::string taskid, std::string chl_type, std::string party, std::string redis, size_t connect_wait_time, bool use_redis, bool net_log_switch, std::map<std::string, std::string> meta) 
-    : role_(role), taskid_(taskid), party_(party), redis_(redis) {
-  ctx_ = SetupGrpclinks(role, taskid, chl_type, party, redis, connect_wait_time, use_redis, net_log_switch, meta);
-}
-
-channel::~channel() {
-  // 析构函数实现
-}
-
-bool channel::send(std::string input) {
-  yacl::Buffer buffer(input.c_str(), input.length());
-  ctx_->Send((role_ + 1) % 2, buffer, "tag");
-  return true;
-}
-
-std::string channel::recv() {
-  auto value = ctx_->Recv((role_ + 1) % 2, "tag");
-  std::string ret(static_cast<const char*>(value.data()), value.size());
-  return ret;
-}
-
 
 
 }  // namespace utils

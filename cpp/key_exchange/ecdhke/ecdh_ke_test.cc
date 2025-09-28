@@ -26,50 +26,29 @@
 #include "yacl/link/test_util.h"
 #include "yacl/link/context.h"
 
-#include "vole_psi.h"
+#include "cpp/key_exchange/ecdhke/ecdh_ke.h"
 #include "cpp/psi/utils/network_utils.h"
-
 namespace {
 
-// 生成随机的测试数据
-std::vector<std::string> GenerateTestData(size_t size) {
-  // 生成随机的 uint64 数据
-  // 确保生成的数字在合理范围内
-  std::vector<std::string> data;
-  std::mt19937_64 rng(0);  // 使用固定种子 0，与 Python 版本一致
-  
-  for (size_t i = 0; i < size; ++i) {
-    data.push_back(std::to_string(rng() % (1ULL << 63)));
-  }
-  
-  return data;
-}
-
-
-
-// 运行 VolePsi
-void RunVolePsi(size_t role, const std::vector<std::string>& test_data) {
+// 运行 ECDHKE
+void RunECDHKE(size_t role, size_t key_exchange_size) {
   // 创建配置JSON
   nlohmann::json config;
   config["role"] = role;
-  config["psi_protocol"] = 1;  // VOLE PSI
+  config["psi_protocol"] = 0;  // ECDH PSI
   config["curve_type"] = 1;   // CURVE_25519
-  config["sysectbits"] = 112;
-  config["fast_mode"] = true;
-  config["malicious"] = false;
-  config["broadcast_result"] = true;
   
   std::string config_json = config.dump();
   
   // 创建链接
-  auto ctx = psi::utils::Createlinks(role, "VOLE-PSI-test", "mem");
-  SPDLOG_INFO("Role {} starting PSI computation...", role);
+  auto ctx = psi::utils::Createlinks(role, "ECDH-KE-test", "mem");
+  SPDLOG_INFO("Role {} starting ECDHKE computation...", role);
   
   // 开始计时
   auto start_time = std::chrono::high_resolution_clock::now();
   
-  // 调用 vole_execute 方法并获取结果
-  auto result = psi::vole_execute(ctx, config_json, test_data);
+  // 调用 ecdh_execute 方法并获取结果
+  auto result = ke::ecdhke_execute(ctx, config_json, key_exchange_size);
   
   // 结束计时
   auto end_time = std::chrono::high_resolution_clock::now();
@@ -100,12 +79,10 @@ int main() {
   SPDLOG_INFO("Preparing test data...");
   
   // 开始数据准备计时
-  std::vector<std::string> data0 = GenerateTestData(100000);
-  std::vector<std::string> data1 = GenerateTestData(100000);
   
   // 创建两个线程，分别运行角色 0 和角色 1 的PSI计算
-  std::thread t0(RunVolePsi, 0, std::cref(data0));
-  std::thread t1(RunVolePsi, 1, std::cref(data1));
+  std::thread t0(RunECDHKE, 0, 10000);
+  std::thread t1(RunECDHKE, 1, 10000);
   
   // 等待线程结束
   t0.join();

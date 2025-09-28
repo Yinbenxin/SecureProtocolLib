@@ -22,7 +22,7 @@ py_library(
     name = "pyspl",
     srcs = ["__init__.py"],
     deps = [
-        "//pyspl/src:psi_lib",
+        "//pyspl/src:spllib_lib",
     ],
     imports = ["."],
 )

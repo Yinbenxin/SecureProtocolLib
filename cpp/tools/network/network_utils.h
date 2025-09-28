@@ -33,32 +33,17 @@ namespace utils {
 int GetAvailablePort();
 
 // 设置GRPC链接的函数
-std::shared_ptr<yacl::link::Context> SetupGrpclinks(
+std::shared_ptr<yacl::link::Context> Createlinks(
     size_t role,
     const std::string& taskid,
-    const std::string& chl_type,
-    const std::string& party,
-    const std::string& redis,
-    size_t connect_wait_time,
-    bool use_redis,
-    bool net_log_switch,
-    const std::map<std::string, std::string>& meta
+    const std::string& chl_type = "mem",
+    const std::string& party = "localhost:50051",
+    const std::string& redis = "localhost:6379",
+    size_t connect_wait_time = 60000,
+    bool use_redis = false,
+    bool net_log_switch = false,
+    const std::map<std::string, std::string>& meta = {}
 );
-
-class channel {
- public:
-  channel(size_t role, std::string taskid, std::string chl_type, std::string party, std::string redis, size_t connect_wait_time, bool use_redis, bool net_log_switch, std::map<std::string, std::string> meta);
-  ~channel();
-  bool send(std::string input);
-  std::string recv();
- private:
-  size_t role_;
-  std::string taskid_;
-  std::string party_;
-  std::string redis_;
-  std::shared_ptr<yacl::link::Context> ctx_;
-};
-
 
 }  // namespace utils
 }  // namespace psi

@@ -3,7 +3,7 @@
 
 import multiprocessing
 
-from pyspl import Channel
+from pyspl import CreateChannel
 import time
 import logging
 
@@ -41,27 +41,18 @@ def channel_test(role):
     redis = "localhost:6379"
     
     logging.info(f"Starting channel test with role {role}")
-    
-    # 创建通信通道
-    channel = Channel(
-        role=role,
-        taskid=taskid,
-        party=address,
-        redis=redis,
-        chl_type="mem"
-    )
-    
+    ctx=CreateChannel(role, taskid, "mem", address, redis)
     result = {}
     
     # 根据角色执行不同操作
     if role == 0:  # sender
         # 生成测试数据
-        test_data = generate_test_data(1000000)
+        test_data = generate_test_data(100)
         logging.info(f"Sender generated test data: {len(test_data)} bytes")
         
         # 发送数据并统计时间
         start_time = time.time()
-        send_success = channel.send(test_data)
+        send_success = ctx.send(test_data)
         send_time = time.time() - start_time
         
         logging.info(f"Sender sent data, success: {send_success}, time: {send_time:.4f}s")
@@ -76,7 +67,7 @@ def channel_test(role):
     else:  # receiver
         # 接收数据并统计时间
         start_time = time.time()
-        received_data = channel.recv()
+        received_data = ctx.recv()
         recv_time = time.time() - start_time
         
         logging.info(f"Receiver got data: {len(received_data)} bytes, time: {recv_time:.4f}s")

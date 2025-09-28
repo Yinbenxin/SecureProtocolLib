@@ -14,28 +14,29 @@
 
 
 
-#include "ecdh_psi.h"
+#include "circuit_psi.h"
 #include <algorithm>
 #include "fmt/format.h"
 
 namespace psi {
 
-std::vector<std::string> ecdh_execute(const std::shared_ptr<yacl::link::Context>& lctx,
+std::vector<std::vector<int64_t>> circuit_execute(const std::shared_ptr<yacl::link::Context>& lctx,
                                       const std::string& config_json,
-                                      const std::vector<std::string>& input) {
+                                      const std::vector<std::string>& id,
+                                    const std::vector<std::vector<int64_t>>& data) {
     // json解析config_json
     nlohmann::json config = nlohmann::json::parse(config_json);
     // 从config中提取psi_type
     int curve_type = config.value("curve_type", 0);
-    size_t batch_size = config.value("batch_size", 4096);
-    SPDLOG_INFO("[ECDHPSI]  config_json: {}", config_json);
-    SPDLOG_INFO("[ECDHPSI]  START curve_type: {}", curve_type);
-    SPDLOG_INFO("[ECDHPSI]  batch_size: {}", batch_size);
-    SPDLOG_INFO("[ECDHPSI]  input size: {}, input[0]: {}", input.size(), input[0]);
-    std::vector<std::string> output = ecdh::RunEcdhPsi(lctx, input, yacl::link::kAllRank, static_cast<psi::CurveType>(curve_type), batch_size);
-    SPDLOG_INFO("[ECDHPSI]  END output size: {}", output.size());
+    SPDLOG_INFO("[CircuitPSI]  START curve_type: {}", curve_type);
+    SPDLOG_INFO("[CircuitPSI]  id size: {}, id[0]: {}", id.size(), id[0]);
+    SPDLOG_INFO("[CircuitPSI]  config_json: {}", config_json);
+    SPDLOG_INFO("[CircuitPSI]  data size: {}, data[0]: {}", data.size(), data[0][0]);
+    auto output = circuit::RunCircuitPsi(lctx, id, data, static_cast<psi::CurveType>(curve_type));
+    SPDLOG_INFO("[CircuitPSI]  END output size: {}", output.size());
     return output;
 
 };
+
 
 }

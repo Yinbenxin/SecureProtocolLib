@@ -1,5 +1,4 @@
-# python channel_test.py 0 JG0100018800000000 channel_test_task4
-# python channel_test.py 1 JG0100018700000000 channel_test_task4
+
 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -14,8 +13,7 @@ from lego_common.settings import REDIS
 import random
 import string
 
-from pyspl import PSIParty
-from pyspl import Channel
+from pyspl import CreateChannel
 import logging
 
 def generate_test_data(size):
@@ -33,7 +31,7 @@ def generate_test_data(size):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-def channel_test(role, party_id, taskid):
+def channel_test(role, party_id, taskid, data_size):
     """Channel通信测试
     
     Args:
@@ -51,15 +49,15 @@ def channel_test(role, party_id, taskid):
 
     logging.info(f'{party_id} redis: {redis}, address: {address}, meta: {meta}')
     logging.info(f"Starting channel test with role {role}")
-    
     # 创建通信通道
-    channel = Channel(
+    channel = CreateChannel(
         role=role,
         taskid=taskid,
         party=address,
         redis=redis,
         chl_type="grpc",
-        meta=meta
+        meta=meta,
+        use_redis = False,
     )
     
     result = {}
@@ -67,7 +65,7 @@ def channel_test(role, party_id, taskid):
     # 根据角色执行不同操作
     if role == 0:  # sender
         # 生成测试数据
-        test_data = generate_test_data(1000000)
+        test_data = generate_test_data(data_size)
         logging.info(f"Sender generated test data: {len(test_data)} bytes")
         
         # 发送数据并统计时间
@@ -107,4 +105,5 @@ if __name__ == "__main__":
     role = int(sys.argv[1])
     dst_party_id = sys.argv[2]
     taskid = sys.argv[3]
-    channel_test(role,dst_party_id, taskid)
+    data_size = int(sys.argv[4])
+    channel_test(role,dst_party_id, taskid, data_size)

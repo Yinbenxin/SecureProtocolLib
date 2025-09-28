@@ -28,3 +28,13 @@ config_setting(
     name = "curve_build_as_fast",
     values = {"compilation_mode": "fastbuild"},
 )
+
+config_setting(
+    name = "enable_openmp",
+    define_values = {"omp": "on"},
+)
+
+config_setting(
+    name = "disable_openmp",
+    define_values = {"omp": "off"},
+)
