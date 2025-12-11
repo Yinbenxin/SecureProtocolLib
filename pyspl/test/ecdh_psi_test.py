@@ -2,7 +2,7 @@ import multiprocessing
 import random
 import logging
 import json
-from pyspl import PSIExecute, CreateChannel, PSIType, CurveType
+import time
 from pyspl import PSIExecute, CreateChannel, PSIType, CurveType
 
 
@@ -13,7 +13,7 @@ def generate_test_data(size):
     random.seed(0)
     return [str(random.randint(0, 2**64-1)) for _ in range(size)]
 
-def run_ecdh_psi(role):
+def run_ecdh_psi(role, mailbox0, mailbox1):
     # 创建 VolePsi 实例
     config_json = f'''{{
         "role": {role},
@@ -24,7 +24,29 @@ def run_ecdh_psi(role):
     
     logging.info(f"Python - 角色 {role} 开始初始化 PSIParty")
     logging.info(f"Python - 配置: {config_json}")
-    ctx=CreateChannel(role, "psi_test", "mem")
+    # 定义内存通信回调：发送写入对方的mailbox，接收从自己的mailbox读取
+    def send_cb(tag: str, payload: bytes) -> int:
+        if role == 0:
+            mailbox1[tag] = payload
+        else:
+            mailbox0[tag] = payload
+        return 0
+
+    def recv_cb(tag: str) -> bytes:
+        if role == 0:
+            while tag not in mailbox0:
+                time.sleep(0.001)
+            data = mailbox0[tag]
+            del mailbox0[tag]
+            return data
+        else:
+            while tag not in mailbox1:
+                time.sleep(0.001)
+            data = mailbox1[tag]
+            del mailbox1[tag]
+            return data
+
+    ctx = CreateChannel(role, send_cb, recv_cb)
 
     
     # 生成测试数据
@@ -46,8 +68,11 @@ if __name__ == '__main__':
     
     # 创建两个进程，分别运行角色 0 和角色 1
     logging.info("Python - 创建两个进程，分别运行角色 0 和角色 1")
-    p0 = multiprocessing.Process(target=run_ecdh_psi, args=(0,))
-    p1 = multiprocessing.Process(target=run_ecdh_psi, args=(1,))
+    manager = multiprocessing.Manager()
+    mailbox0 = manager.dict()
+    mailbox1 = manager.dict()
+    p0 = multiprocessing.Process(target=run_ecdh_psi, args=(0, mailbox0, mailbox1))
+    p1 = multiprocessing.Process(target=run_ecdh_psi, args=(1, mailbox0, mailbox1))
     
     # 启动进程
     logging.info("Python - 启动进程")

@@ -52,18 +52,10 @@ int GetAvailablePort() {
   return port;
 }
 
-// 设置GRPC链接的函数
-std::shared_ptr<yacl::link::Context> Createlinks(
-    size_t role,
-    const std::string& taskid,
-    const std::string& chl_type,
-    const std::string& party,
-    const std::string& redis,
-    size_t connect_wait_time,
-    bool use_redis,
-    bool net_log_switch,
-    const std::map<std::string, std::string>& meta
-) {
+// 设置链接并注入发送/接收回调
+std::shared_ptr<yacl::link::Context> Createlinks(size_t role,
+                                                 std::function<int(const std::string &, std::string &)> send_cb,
+                                                 std::function<std::string(const std::string&)> recv_cb) {
   size_t world_size = 2;
   yacl::link::ContextDesc ctx_desc;
   
@@ -86,7 +78,9 @@ std::shared_ptr<yacl::link::Context> Createlinks(
     ctx_desc.parties.emplace_back(id, host);
   }
   auto lctx = yacl::link::FactoryBrpc().CreateContext(ctx_desc, role);
-  lctx->add_gaia_net(taskid, chl_type, party, redis, connect_wait_time, use_redis, net_log_switch, meta);
+  if (send_cb && recv_cb) {
+    lctx->AddChannel(std::move(send_cb), std::move(recv_cb));
+  }
   return lctx;
 }
 

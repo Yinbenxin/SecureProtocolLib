@@ -1,6 +1,6 @@
 from math import log
 from .spllib import psi_execute as PSIExecute
-from .spllib import label_psi_execute 
+# from .spllib import label_psi_execute 
 from enum import Enum
 from decimal import Decimal
 import logging
@@ -53,8 +53,8 @@ def LabelPSIExecute(ctx, config_json, id, label):
     # label是二维列表，需要对每个子列表中的每个元素进行处理
     scaled_label = [[int(item * scale_factor) for item in sublist] for sublist in label]
     # 执行PSI计算
-    result = label_psi_execute(ctx, config_json, id, scaled_label)
-
+    # result = label_psi_execute(ctx, config_json, id, scaled_label)
+    result =[]
     # return result
     # 避免当 scale_factor 为 1 时将大整数转换为 float 导致精度丢失
     if scale_factor == 1:

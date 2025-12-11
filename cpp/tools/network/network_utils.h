@@ -18,13 +18,10 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "yacl/link/context.h"
 
 // 前向声明
-namespace yacl {
-namespace link {
-class Context;
-}  // namespace link
-}  // namespace yacl
+// 依赖 yacl::link::Context 及其回调类型
 
 namespace psi {
 namespace utils {
@@ -32,18 +29,11 @@ namespace utils {
 // 获取可用端口的辅助函数
 int GetAvailablePort();
 
-// 设置GRPC链接的函数
+// 设置链接并注入发送/接收回调
 std::shared_ptr<yacl::link::Context> Createlinks(
     size_t role,
-    const std::string& taskid,
-    const std::string& chl_type = "mem",
-    const std::string& party = "localhost:50051",
-    const std::string& redis = "localhost:6379",
-    size_t connect_wait_time = 60000,
-    bool use_redis = false,
-    bool net_log_switch = false,
-    const std::map<std::string, std::string>& meta = {}
-);
+    std::function<int(const std::string &, std::string &)> send_cb,
+    std::function<std::string(const std::string&)> recv_cb);
 
 }  // namespace utils
 }  // namespace psi

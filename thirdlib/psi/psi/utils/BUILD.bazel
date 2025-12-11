@@ -1,0 +1,424 @@
+# Copyright 2022 Ant Group Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@yacl//bazel:yacl.bzl", "AES_COPT_FLAGS")
+load("//bazel:psi.bzl", "psi_cc_library", "psi_cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+psi_cc_library(
+    name = "multiplex_disk_cache",
+    srcs = ["multiplex_disk_cache.cc"],
+    hdrs = ["multiplex_disk_cache.h"],
+    deps = [
+        ":io",
+        ":random_str",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+psi_cc_test(
+    name = "multiplex_disk_cache_test",
+    srcs = ["multiplex_disk_cache_test.cc"],
+    deps = [
+        ":multiplex_disk_cache",
+    ],
+)
+
+psi_cc_library(
+    name = "hash_bucket_cache",
+    srcs = ["hash_bucket_cache.cc"],
+    hdrs = ["hash_bucket_cache.h"],
+    deps = [
+        ":arrow_csv_batch_provider",
+        ":multiplex_disk_cache",
+        ":random_str",
+        "@abseil-cpp//absl/strings",
+        "@yacl//yacl/base:int128",
+    ],
+)
+
+psi_cc_library(
+    name = "arrow_helper",
+    srcs = ["arrow_helper.cc"],
+    hdrs = ["arrow_helper.h"],
+    deps = [
+        "@org_apache_arrow//:arrow",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+psi_cc_library(
+    name = "pb_helper",
+    srcs = ["pb_helper.cc"],
+    hdrs = ["pb_helper.h"],
+    deps = [
+        ":io",
+        "@protobuf",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+psi_cc_library(
+    name = "table_utils",
+    srcs = ["table_utils.cc"],
+    hdrs = ["table_utils.h"],
+    deps = [
+        ":arrow_csv_batch_provider",
+        ":arrow_helper",
+        ":index_store",
+        ":pb_helper",
+        ":random_str",
+        ":table_utils_cc_proto",
+        "@yacl//yacl/base:exception",
+        "@yacl//yacl/crypto/hash:ssl_hash",
+    ],
+)
+
+psi_cc_test(
+    name = "join_processor_test",
+    srcs = ["join_processor_test.cc"],
+    deps = [
+        ":join_processor",
+    ],
+)
+
+psi_cc_library(
+    name = "join_processor",
+    srcs = ["join_processor.cc"],
+    hdrs = ["join_processor.h"],
+    deps = [
+        ":index_store",
+        ":random_str",
+        ":table_utils",
+        "//psi/proto:psi_v2_cc_proto",
+        "@yacl//yacl/base:exception",
+        "@yacl//yacl/link",
+    ],
+)
+
+psi_cc_test(
+    name = "table_utils_test",
+    srcs = ["table_utils_test.cc"],
+    deps = [
+        ":arrow_helper",
+        ":index_store",
+        ":table_utils",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+psi_cc_library(
+    name = "csv_checker",
+    srcs = ["csv_checker.cc"],
+    hdrs = ["csv_checker.h"],
+    deps = [
+        ":io",
+        ":key",
+        ":random_str",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/time",
+        "@org_apache_arrow//:arrow",
+        "@yacl//yacl/base:exception",
+        "@yacl//yacl/crypto/hash:hash_utils",
+        "@yacl//yacl/utils:scope_guard",
+    ],
+)
+
+psi_cc_library(
+    name = "serialize",
+    hdrs = ["serialize.h"],
+    deps = [
+        ":serializable_cc_proto",
+        "@yacl//yacl/base:buffer",
+    ],
+)
+
+proto_library(
+    name = "serializable_proto",
+    srcs = ["serializable.proto"],
+)
+
+cc_proto_library(
+    name = "serializable_cc_proto",
+    deps = [":serializable_proto"],
+)
+
+proto_library(
+    name = "table_utils_proto",
+    srcs = ["table_utils.proto"],
+)
+
+cc_proto_library(
+    name = "table_utils_cc_proto",
+    deps = [":table_utils_proto"],
+)
+
+psi_cc_test(
+    name = "csv_checker_test",
+    srcs = ["csv_checker_test.cc"],
+    deps = [
+        ":csv_checker",
+    ],
+)
+
+psi_cc_library(
+    name = "ec_point_store",
+    srcs = ["ec_point_store.cc"],
+    hdrs = ["ec_point_store.h"],
+    linkopts = select({
+        "@bazel_tools//src/conditions:darwin": [],
+        "//conditions:default": ["-fopenmp"],
+    }),
+    deps = [
+        ":arrow_csv_batch_provider",
+        ":hash_bucket_cache",
+        ":index_store",
+        "@yacl//yacl/link",
+    ],
+)
+
+psi_cc_library(
+    name = "batch_provider",
+    hdrs = ["batch_provider.h"],
+)
+
+psi_cc_library(
+    name = "batch_provider_impl",
+    srcs = ["batch_provider_impl.cc"],
+    hdrs = ["batch_provider_impl.h"],
+    deps = [
+        ":arrow_csv_batch_provider",
+        ":io",
+        ":key",
+        "@abseil-cpp//absl/strings",
+        "@yacl//yacl/base:exception",
+        "@yacl//yacl/crypto/rand",
+    ],
+)
+
+psi_cc_library(
+    name = "resource",
+    srcs = ["resource.cc"],
+    hdrs = ["resource.h"],
+    deps = [
+        ":hash_bucket_cache",
+        "@abseil-cpp//absl/strings",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+psi_cc_library(
+    name = "test_utils",
+    hdrs = [
+        "test_utils.h",
+    ],
+    deps = [
+        "//psi/proto:psi_cc_proto",
+        "@yacl//yacl/crypto/hash:hash_utils",
+    ],
+)
+
+psi_cc_library(
+    name = "sync",
+    srcs = ["sync.cc"],
+    hdrs = ["sync.h"],
+    deps = [
+        ":serialize",
+        "@yacl//yacl/link",
+    ],
+)
+
+psi_cc_library(
+    name = "progress",
+    srcs = ["progress.cc"],
+    hdrs = ["progress.h"],
+    deps = [
+        "@fmt",
+    ],
+)
+
+psi_cc_library(
+    name = "random_str",
+    hdrs = ["random_str.h"],
+    deps = [
+        "@abseil-cpp//absl/strings",
+        "@yacl//yacl/crypto/rand",
+    ],
+)
+
+psi_cc_test(
+    name = "progress_test",
+    srcs = ["progress_test.cc"],
+    deps = [
+        ":progress",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+psi_cc_library(
+    name = "arrow_csv_batch_provider",
+    srcs = ["arrow_csv_batch_provider.cc"],
+    hdrs = ["arrow_csv_batch_provider.h"],
+    deps = [
+        ":batch_provider",
+        ":key",
+        "@org_apache_arrow//:arrow",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+psi_cc_test(
+    name = "arrow_csv_batch_provider_test",
+    srcs = ["arrow_csv_batch_provider_test.cc"],
+    deps = [
+        ":arrow_csv_batch_provider",
+    ],
+)
+
+psi_cc_library(
+    name = "index_store",
+    srcs = ["index_store.cc"],
+    hdrs = ["index_store.h"],
+    deps = [
+        ":io",
+        "@org_apache_arrow//:arrow",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+psi_cc_test(
+    name = "index_store_test",
+    srcs = ["index_store_test.cc"],
+    deps = [
+        ":index_store",
+    ],
+)
+
+psi_cc_library(
+    name = "bucket",
+    srcs = ["bucket.cc"],
+    hdrs = ["bucket.h"],
+    deps = [
+        ":hash_bucket_cache",
+        ":index_store",
+        ":sync",
+        "//psi:prelude",
+        "//psi/checkpoint:recovery",
+        "//psi/proto:psi_v2_cc_proto",
+    ],
+)
+
+psi_cc_library(
+    name = "key",
+    srcs = [
+        "key.cc",
+    ],
+    hdrs = [
+        "key.h",
+    ],
+    deps = [
+        ":arrow_helper",
+        ":io",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+psi_cc_library(
+    name = "io",
+    srcs = ["io.cc"],
+    hdrs = ["io.h"],
+    deps = [
+        "@org_apache_arrow//:arrow",
+        "@yacl//yacl/base:exception",
+        "@yacl//yacl/io/rw",
+        "@yacl//yacl/io/stream",
+    ],
+)
+
+psi_cc_library(
+    name = "ec",
+    srcs = ["ec.cc"],
+    hdrs = ["ec.h"],
+    deps = [
+        ":io",
+        "//psi/cryptor:ecc_cryptor",
+    ],
+)
+
+psi_cc_library(
+    name = "communication",
+    srcs = ["communication.cc"],
+    hdrs = ["communication.h"],
+    deps = [
+        ":serialize",
+        "@yacl//yacl/base:exception",
+        "@yacl//yacl/link",
+    ],
+)
+
+psi_cc_library(
+    name = "resource_manager",
+    srcs = ["resource_manager.cc"],
+    hdrs = ["resource_manager.h"],
+    deps = [
+        "@yacl//yacl/base:exception",
+        "@yacl//yacl/link",
+    ],
+)
+
+psi_cc_library(
+    name = "cuckoo_index",
+    srcs = ["cuckoo_index.cc"],
+    hdrs = ["cuckoo_index.h"],
+    linkopts = ["-lm"],
+    deps = [
+        "@abseil-cpp//absl/types:span",
+        "@yacl//yacl/base:exception",
+        "@yacl//yacl/base:int128",
+    ],
+)
+
+psi_cc_test(
+    name = "cuckoo_index_test",
+    srcs = ["cuckoo_index_test.cc"],
+    deps = [
+        ":cuckoo_index",
+        "@yacl//yacl/crypto/rand",
+    ],
+)
+
+psi_cc_library(
+    name = "csv_converter",
+    srcs = ["csv_converter.cc"],
+    hdrs = ["csv_converter.h"],
+    deps = [
+        "//psi/wrapper/apsi/utils:common",
+        "@org_apache_arrow//:arrow",
+        "@yacl//yacl/base:exception",
+    ],
+)
+
+psi_cc_test(
+    name = "csv_converter_test",
+    srcs = ["csv_converter_test.cc"],
+    deps = [
+        ":arrow_csv_batch_provider",
+        ":csv_converter",
+        ":random_str",
+        "@com_google_googletest//:gtest",
+    ],
+)

@@ -1,0 +1,231 @@
+//
+// Copyright 2022 Ant Group Co., Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+import "psi/proto/psi.proto";
+
+package psi;
+
+// NOTE(junfeng): We provide a config identical to original APSI CLI.
+// Please check
+// https://github.com/microsoft/APSI?tab=readme-ov-file#command-line-interface-cli
+// for details.
+message ApsiSenderConfig {
+  // Number of threads to use
+  uint32 threads = 1;
+
+  // Log file path. For APSI only.
+  string log_file = 2;
+
+  // Do not write output to console. For APSI only.
+  bool silent = 3;
+
+  // One of 'all', 'debug', 'info' (default), 'warning', 'error', 'off'. For
+  // APSI only.
+  string log_level = 4;
+
+  // Path to a CSV file describing the sender's dataset (an item-label pair on
+  // each row) or a file containing a serialized SenderDB; the CLI will first
+  // attempt to load the data as a serialized SenderDB, and – upon failure –
+  // will proceed to attempt to read it as a CSV file
+  // For CSV File:
+  // 1. the first col is processed as item while the second col as label. OTHER
+  // COLS ARE IGNORED.
+  // 2. NO HEADERS ARE ALLOWED.
+  string db_file = 5;
+
+  // Path to a JSON file describing the parameters to be used by the sender.
+  // Not required if db_file points to a serialized SenderDB.
+  string params_file = 6;
+
+  // Save the SenderDB in the given file.
+  // Required if gen_db_only is set true.
+  // Use experimental_bucket_folder instead if you turn
+  // experimental_enable_bucketize on.
+  string sdb_out_file = 7;
+
+  // Number of bytes used for the nonce in labeled mode (default is 16)
+  uint32 nonce_byte_count = 8;
+
+  // Whether to compress the SenderDB in memory; this will make the memory
+  // footprint smaller at the cost of increased computation.
+  bool compress = 9;
+
+  // Whether to save sender db only.
+  bool save_db_only = 10;
+
+  // [experimental] Whether to split data in buckets and Each bucket would be a
+  // seperate SenderDB. If set, experimental_bucket_folder must be a valid
+  // folder.
+  bool experimental_enable_bucketize = 13;
+
+  // [experimental] The number of bucket to fit data.
+  uint32 experimental_bucket_cnt = 14;
+
+  // [experimental] Folder to save bucketized small csv files and db files.
+  string experimental_bucket_folder = 15;
+
+  // [experimental] The number of processes to use for generating db.
+  int32 experimental_db_generating_process_num = 16;
+
+  // Source file used to genenerate sender db.
+  // Currently only support csv file.
+  string source_file = 17;
+
+  // [experimental] The number of group of bucket, each group has a db_file,
+  // default 1024.
+  int32 experimental_bucket_group_cnt = 18;
+}
+
+message ApsiReceiverConfig {
+  // Number of threads to use
+  uint32 threads = 1;
+
+  // Log file path. For APSI only.
+  string log_file = 2;
+
+  // Do not write output to console. For APSI only.
+  bool silent = 3;
+
+  // One of 'all', 'debug', 'info' (default), 'warning', 'error', 'off'. For
+  // APSI only.
+  string log_level = 4;
+
+  // Path to a text file containing query data (one per line).
+  // Header is not needed.
+  string query_file = 5;
+
+  // Path to a file where intersection result will be written.
+  string output_file = 6;
+
+  // Path to a JSON file describing the parameters to be used by the sender.
+  // If not set, receiver will ask sender, which results in additional
+  // communication.
+  string params_file = 7;
+
+  // Must be same as sender config.
+  bool experimental_enable_bucketize = 8;
+
+  // Must be same as sender config.
+  uint32 experimental_bucket_cnt = 9;
+
+  // The number of query in a batch. default 1.
+  uint32 query_batch_size = 10;
+}
+
+message DkPirSenderConfig {
+  enum Mode {
+    MODE_UNSPECIFIED = 0;
+    MODE_OFFLINE = 1;
+    MODE_ONLINE = 2;
+  }
+  Mode mode = 1;
+
+  // Number of threads to use
+  uint32 threads = 2;
+
+  // One of 'all', 'debug', 'info' (default), 'warning', 'error', 'off'. For
+  // APSI only.
+  string log_level = 3;
+
+  // Log file path. For APSI only.
+  string log_file = 4;
+
+  // Path to a JSON file describing the parameters to be used by the sender.
+  // Not required if db_file points to a serialized SenderDB.
+  string params_file = 5;
+
+  // Source file used to genenerate sender db.
+  // Currently only support csv file.
+  string source_file = 6;
+
+  // Save the SenderDB for data in the given file.
+  string value_sdb_out_file = 7;
+
+  // Save the SenderDB for row count in the given file.
+  string count_sdb_out_file = 8;
+
+  // Save the secret key of phe
+  string secret_key_file = 9;
+
+  // Save the total row count of query
+  string result_file = 10;
+
+  // Folder to save temporary file
+  string tmp_folder = 11;
+
+  // The key column name of input data
+  string key = 12;
+
+  // The label columns name of input data. This item cannot be empty.
+  repeated string labels = 13;
+
+  // The elliptic curve cryptography used in Elgamal. If skip_count_check is
+  // false, this is a must-have option. The current support is "CURVE_FOURQ" and
+  // "CURVE_SM2".
+  .psi.CurveType curve_type = 14;
+
+  // If true, the check of row count will be skiped.
+  bool skip_count_check = 15;
+}
+
+message DkPirReceiverConfig {
+  // Number of threads to use
+  uint32 threads = 1;
+
+  // One of 'all', 'debug', 'info' (default), 'warning', 'error', 'off'. For
+  // APSI only.
+  string log_level = 2;
+
+  // Log file path. For APSI only.
+  string log_file = 3;
+
+  // Path to a JSON file describing the parameters to be used by the sender.
+  // If not set, receiver will ask sender, which results in additional
+  // communication.
+  string params_file = 4;
+
+  // Path to a text file containing query data (one per line).
+  // Header is not needed.
+  string query_file = 5;
+
+  // Path to a file where intersection result will be written.
+  string result_file = 6;
+
+  // Folder to save temporary file
+  string tmp_folder = 7;
+
+  // The key column name of source file
+  string key = 8;
+
+  // The label columns name which receiver want to query. This item cannot be
+  // empty.
+  repeated string labels = 9;
+
+  // The elliptic curve cryptography used in Elgamal. If skip_count_check is
+  // false, this is a must-have option. The current support is "CURVE_FOURQ" and
+  // "CURVE_SM2".
+  .psi.CurveType curve_type = 10;
+
+  // If true, the check of row count will be skiped.
+  bool skip_count_check = 11;
+}
+
+// The report of pir task.
+message PirResultReport {
+  int64 match_cnt = 1;
+}

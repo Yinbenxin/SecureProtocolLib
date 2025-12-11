@@ -1,0 +1,125 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 55e2d77..7d3007b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -146,7 +146,11 @@ if(NOT Flatbuffers_FOUND)
+     message(FATAL_ERROR "Flatbuffers: not found")
+ else()
+     message(STATUS "Flatbuffers: found")
+-    get_target_property(FLATBUFFERS_FLATC_PATH flatbuffers::flatc IMPORTED_LOCATION_RELEASE)
++    if (CMAKE_BUILD_TYPE STREQUAL "Release")
++        get_target_property(FLATBUFFERS_FLATC_PATH flatbuffers::flatc IMPORTED_LOCATION_RELEASE)
++    else()
++        get_target_property(FLATBUFFERS_FLATC_PATH flatbuffers::flatc IMPORTED_LOCATION_DEBUG)
++    endif()
+     message(STATUS "flatc path: ${FLATBUFFERS_FLATC_PATH}")
+     include(CompileSchemaCXX)
+ endif()
+diff --git a/receiver/apsi/itt.h b/receiver/apsi/itt.h
+index e683045..067d244 100644
+--- a/receiver/apsi/itt.h
++++ b/receiver/apsi/itt.h
+@@ -30,7 +30,7 @@ namespace apsi {
+                 return item_count_;
+             }
+ 
+-        private:
++            // private:
+             IndexTranslationTable() = default;
+ 
+             std::unordered_map<std::size_t, std::size_t> table_idx_to_item_idx_;
+diff --git a/receiver/apsi/CMakeLists.txt b/receiver/apsi/CMakeLists.txt
+index afce298..1790b30 100644
+--- a/receiver/apsi/CMakeLists.txt
++++ b/receiver/apsi/CMakeLists.txt
+@@ -12,6 +12,7 @@ install(
+     FILES
+         ${CMAKE_CURRENT_LIST_DIR}/itt.h
+         ${CMAKE_CURRENT_LIST_DIR}/match_record.h
++        ${CMAKE_CURRENT_LIST_DIR}/plaintext_powers.h
+         ${CMAKE_CURRENT_LIST_DIR}/receiver.h
+     DESTINATION
+         ${APSI_INCLUDES_INSTALL_DIR}/apsi
+diff --git a/common/apsi/network/sender_operation.cpp b/common/apsi/network/sender_operation.cpp
+index 850ac47..aef52a4 100644
+--- a/common/apsi/network/sender_operation.cpp
++++ b/common/apsi/network/sender_operation.cpp
+@@ -135,7 +135,7 @@ namespace apsi {
+ 
+             auto oprf_data = fbs_builder.CreateVector(
+                 reinterpret_cast<const uint8_t *>(data.data()), data.size());
+-            auto req = fbs::CreateOPRFRequest(fbs_builder, oprf_data);
++            auto req = fbs::CreateOPRFRequest(fbs_builder, oprf_data, bucket_idx);
+ 
+             fbs::SenderOperationBuilder sop_builder(fbs_builder);
+             sop_builder.add_request_type(fbs::Request_OPRFRequest);
+@@ -180,6 +180,7 @@ namespace apsi {
+             const auto &oprf_data = *sop->request_as_OPRFRequest()->data();
+             data.resize(oprf_data.size());
+             copy_bytes(oprf_data.data(), oprf_data.size(), data.data());
++            bucket_idx = sop->request_as_OPRFRequest()->bucket_idx();
+ 
+             return in_data.size();
+         }
+@@ -231,7 +232,8 @@ namespace apsi {
+                 fbs_builder,
+                 static_cast<uint8_t>(compr_mode),
+                 relin_keys_data,
+-                query_request_parts);
++                query_request_parts,
++                bucket_idx);
+ 
+             fbs::SenderOperationBuilder sop_builder(fbs_builder);
+             sop_builder.add_request_type(fbs::Request_QueryRequest);
+@@ -346,6 +348,8 @@ namespace apsi {
+                 data.emplace(exponent, move(cts_vec));
+             }
+ 
++            bucket_idx = req.bucket_idx();
++
+             return in_data.size();
+         }
+     } // namespace network
+diff --git a/common/apsi/network/sender_operation.h b/common/apsi/network/sender_operation.h
+index a9cc4df..ce3769c 100644
+--- a/common/apsi/network/sender_operation.h
++++ b/common/apsi/network/sender_operation.h
+@@ -115,6 +115,8 @@ namespace apsi {
+             Holds the OPRF query data.
+             */
+             std::vector<unsigned char> data;
++
++            std::uint32_t bucket_idx = 0;
+         }; // class SenderOperationOPRF
+ 
+         /**
+@@ -140,6 +142,8 @@ namespace apsi {
+             ciphertext and the vector holds the ciphertext data for different bundle indices.
+             */
+             std::unordered_map<std::uint32_t, std::vector<SEALObject<seal::Ciphertext>>> data;
++
++            std::uint32_t bucket_idx = 0;
+         }; // class SenderOperationQuery
+-    }      // namespace network
++    } // namespace network
+ } // namespace apsi
+diff --git a/common/apsi/network/sop.fbs b/common/apsi/network/sop.fbs
+index 4c4e116..8eb34fc 100644
+--- a/common/apsi/network/sop.fbs
++++ b/common/apsi/network/sop.fbs
+@@ -10,6 +10,7 @@ table ParmsRequest {
+ 
+ table OPRFRequest {
+     data:[ubyte] (required);
++    bucket_idx:uint32;
+ }
+ 
+ table QueryRequestPart {
+@@ -21,6 +22,7 @@ table QueryRequest {
+     compression_type:ubyte;
+     relin_keys:[ubyte];
+     query:[QueryRequestPart] (required);
++    bucket_idx:uint32;
+ }
+ 
+ union Request { ParmsRequest, OPRFRequest, QueryRequest }

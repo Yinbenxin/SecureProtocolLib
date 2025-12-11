@@ -45,10 +45,10 @@ namespace psi {
 std::vector<std::string> PsiExecute(const std::shared_ptr<yacl::link::Context>& lctx,
                                     const std::string& config_json,
                                     const std::vector<std::string>& input);
-std::vector<std::vector<int64_t>> LabelPsiExecute(const std::shared_ptr<yacl::link::Context>& lctx,
-                                    const std::string& config_json,
-                                    const std::vector<std::string>& id, 
-                                    const std::vector<std::vector<int64_t>>& label);
+// std::vector<std::vector<int64_t>> LabelPsiExecute(const std::shared_ptr<yacl::link::Context>& lctx,
+//                                     const std::string& config_json,
+//                                     const std::vector<std::string>& id, 
+//                                     const std::vector<std::vector<int64_t>>& label);
 }  // namespace psi
 
 

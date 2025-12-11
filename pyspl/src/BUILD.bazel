@@ -28,14 +28,16 @@ pybind_extension(
     }),
     deps = [
         "//cpp/psi:psi",
-        "//cpp/key_exchange:key_exchange",
+        # "//cpp/key_exchange:key_exchange",
         "//cpp/tools/network:network_utils",
     ],
 )
 
 py_library(
     name = "spllib_lib",
-    srcs = ["channel.py", "psi.py", "key_exchange.py"],  # 添加一个空的__init__.py文件
+    # srcs = ["channel.py", "psi.py", "key_exchange.py"],  # 添加一个空的__init__.py文件
+    srcs = ["channel.py", "psi.py"],  # 添加一个空的__init__.py文件
+     
     data = [":spllib.so"],  # 使用.so扩展名
     imports = ["."],
 )

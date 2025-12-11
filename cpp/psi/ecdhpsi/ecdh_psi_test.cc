@@ -19,6 +19,8 @@
 #include <vector>
 #include <functional>
 #include <map>
+#include <unordered_map>
+#include <condition_variable>
 #include <chrono>
 #include "spdlog/spdlog.h"
 #include "fmt/format.h"
@@ -27,7 +29,6 @@
 #include "yacl/link/context.h"
 
 #include "ecdh_psi.h"
-#include "cpp/psi/utils/network_utils.h"
 namespace {
 
 // 生成随机的测试数据
@@ -45,7 +46,9 @@ std::vector<std::string> GenerateTestData(size_t size) {
 
 
 // 运行 ECDHPsi
-void RunECDHPsi(size_t role, const std::vector<std::string>& test_data) {
+void RunECDHPsi(size_t role, std::function<int(const std::string&, std::string&)> send_cb,
+                std::function<std::string(const std::string&)> recv_cb,
+                const std::vector<std::string>& test_data) {
   // 创建配置JSON
   nlohmann::json config;
   config["role"] = role;
@@ -55,7 +58,7 @@ void RunECDHPsi(size_t role, const std::vector<std::string>& test_data) {
   std::string config_json = config.dump();
   
   // 创建链接
-  auto ctx = psi::utils::Createlinks(role, "ECDH-PSI-test", "mem");
+  auto ctx = psi::utils::Createlinks(role, send_cb, recv_cb);
   SPDLOG_INFO("Role {} starting PSI computation...", role);
   
   // 开始计时
@@ -86,6 +89,7 @@ void RunECDHPsi(size_t role, const std::vector<std::string>& test_data) {
   SPDLOG_INFO("Results: {}", results_str);
 }
 
+
 }  // namespace
 
 int main() {
@@ -93,12 +97,63 @@ int main() {
   SPDLOG_INFO("Preparing test data...");
   
   // 开始数据准备计时
-  std::vector<std::string> data0 = GenerateTestData(10000);
+  std::vector<std::string> data0 = GenerateTestData(100000);
   std::vector<std::string> data1 = GenerateTestData(10000);
+  std::vector<std::string> intersection;
+  std::set_intersection(data0.begin(), data0.end(), data1.begin(), data1.end(), std::back_inserter(intersection));
+  SPDLOG_INFO("Intersection size: {}", intersection.size());
+  
+  static std::mutex mtx;
+  static std::condition_variable cv;
+  static std::unordered_map<std::string, std::string> mailbox0;
+  static std::unordered_map<std::string, std::string> mailbox1;
+
+  auto send_cb0 = [](const std::string& tag, std::string& payload) -> int {
+    std::lock_guard<std::mutex> lock(mtx);
+    SPDLOG_INFO("send_cb0->1, tag: {}, payload(size): {}", tag, payload.size());
+
+    mailbox1[tag] = std::move(payload);
+    cv.notify_all();
+    return 0;
+  };
+
+  auto recv_cb0 = [](const std::string& tag) -> std::string {
+    std::unique_lock<std::mutex> lock(mtx);
+    cv.wait(lock, [&]{ return mailbox0.find(tag) != mailbox0.end(); });
+    auto it = mailbox0.find(tag);
+    std::string out = std::move(it->second);
+    SPDLOG_INFO("recv_cb0, tag: {}, payload(size): {}", tag, out.size());
+    mailbox0.erase(it);
+    return out;
+  };
+
+  auto send_cb1 = [](const std::string& tag, std::string& payload) -> int {
+    std::lock_guard<std::mutex> lock(mtx);
+    SPDLOG_INFO("send_cb1->0, tag: {}, payload(size): {}", tag, payload.size());
+
+    mailbox0[tag] = std::move(payload);
+    cv.notify_all();
+    return 0;
+  };
+
+  auto recv_cb1 = [](const std::string& tag) -> std::string {
+    std::unique_lock<std::mutex> lock(mtx);
+    cv.wait(lock, [&]{ return mailbox1.find(tag) != mailbox1.end(); });
+    auto it = mailbox1.find(tag);
+    std::string out = std::move(it->second);
+    SPDLOG_INFO("recv_cb1, tag: {}, payload(size): {}", tag, out.size());
+    mailbox1.erase(it);
+    return out;
+  };
+
+  // auto ctxs = yacl::link::test::SetupBrpcWorld(2);
+
   
   // 创建两个线程，分别运行角色 0 和角色 1 的PSI计算
-  std::thread t0(RunECDHPsi, 0, std::cref(data0));
-  std::thread t1(RunECDHPsi, 1, std::cref(data1));
+  std::thread t0(RunECDHPsi, 0, send_cb0, recv_cb0, std::cref(data0));
+  std::thread t1(RunECDHPsi, 1, send_cb1, recv_cb1, std::cref(data1));
+  // std::thread t0(RunECDHPsi, 0, ctxs[0], std::cref(data0));
+  // std::thread t1(RunECDHPsi, 1, ctxs[1], std::cref(data1));
   
   // 等待线程结束
   t0.join();

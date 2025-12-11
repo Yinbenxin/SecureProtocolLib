@@ -13,7 +13,7 @@ curve_cc_library(
         "//conditions:default": [],
     }),
     deps = [
-        "@psi//psi/ecdh:ecdh_psi",
+        "@psi//psi/algorithm/ecdh:ecdh_psi",
         "@yacl//yacl/crypto/rand",
         "@yacl//yacl/link:context",
         "//cpp/tools/network:network_utils",
@@ -29,5 +29,11 @@ curve_cc_binary(
     ],
 )
 
-
+curve_cc_binary(
+    name = "ecdh_psi_test_brpc",
+    srcs = ["ecdh_psi_test_brpc.cc"],
+    deps = [
+        ":ecdh_psi",
+    ],
+)
 

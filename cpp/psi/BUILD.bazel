@@ -13,9 +13,9 @@ curve_cc_library(
     "//conditions:default": [],
     }),
     deps = [
-        "//cpp/psi/volepsi:vole_psi",
+        # "//cpp/psi/volepsi:vole_psi",
         "//cpp/psi/ecdhpsi:ecdh_psi",
-        "//cpp/psi/circuit_psi:circuit_psi",
+        # "//cpp/psi/circuit_psi:circuit_psi",
         "//cpp/tools/logs:log_configs",
         "@com_github_nlohmann_json//:json",
     ],

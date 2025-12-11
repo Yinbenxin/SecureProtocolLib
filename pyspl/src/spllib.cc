@@ -2,7 +2,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "cpp/psi/psi.h"
-#include "cpp/key_exchange/key_exchange.h"
+// #include "cpp/key_exchange/key_exchange.h"
 #include "cpp/tools/network/network_utils.h"
 #include "yacl/base/buffer.h"
 #include <cstddef>
@@ -21,11 +21,11 @@ PYBIND11_MODULE(spllib, m) {
   m.def("psi_execute", &psi::PsiExecute, "psi execute", py::arg("config"),
         py::arg("lctx"), py::arg("input"), NO_GIL);
 
-  m.def("label_psi_execute", &psi::LabelPsiExecute, "label psi execute", py::arg("config"),
-        py::arg("lctx"), py::arg("id"), py::arg("label"), NO_GIL);
+  // m.def("label_psi_execute", &psi::LabelPsiExecute, "label psi execute", py::arg("config"),
+  //       py::arg("lctx"), py::arg("id"), py::arg("label"), NO_GIL);
   
-  m.def("ke_execute", &ke::KEExecute, "key exchange execute", py::arg("config"),
-        py::arg("lctx"), py::arg("key_exchange_size"), NO_GIL);
+  // m.def("ke_execute", &ke::KEExecute, "key exchange execute", py::arg("config"),
+  //       py::arg("lctx"), py::arg("key_exchange_size"), NO_GIL);
 
   // 绑定Context类
   py::class_<yacl::link::Context, std::shared_ptr<yacl::link::Context>>(m, "Context", "the link handle")
@@ -50,34 +50,47 @@ PYBIND11_MODULE(spllib, m) {
             return py::bytes{buf.data<char>(), static_cast<size_t>(buf.size())};
           },
           "Receives data from the other party");
-  // 绑定Createlinks函数
+  // 绑定 Createlinks：基于 network_utils.cc，将 Python 回调适配为 C++ 回调
   m.def("CreateChannel", 
         [](size_t role,
-           const std::string& taskid,
-           const std::string& chl_type,
-           const std::string& party,
-           const std::string& redis,
-           const std::map<std::string, std::string>& meta,
-           size_t connect_wait_time,
-           bool use_redis,
-           bool net_log_switch)
+           py::function sendCb, py::function recvCb)
             -> std::shared_ptr<yacl::link::Context> {
+          // 持有 Python 回调的指针，并在析构时获取 GIL 以避免 GIL 断言
+          auto send_fn = std::shared_ptr<py::function>(
+              new py::function(sendCb),
+              [](py::function* f) {
+                py::gil_scoped_acquire acquire;
+                delete f;
+              });
+          auto recv_fn = std::shared_ptr<py::function>(
+              new py::function(recvCb),
+              [](py::function* f) {
+                py::gil_scoped_acquire acquire;
+                delete f;
+              });
+
+          // 将 Python 回调包装为 C++ 回调，调用时获取 GIL
+          std::function<int(const std::string&, std::string&)> send_wrapper =
+              [send_fn](const std::string& tag, std::string& payload) -> int {
+                py::gil_scoped_acquire acquire;
+                py::bytes py_payload(payload);
+                py::object ret = (*send_fn)(tag, py_payload);
+                return ret.cast<int>();
+              };
+          std::function<std::string(const std::string&)> recv_wrapper =
+              [recv_fn](const std::string& tag) -> std::string {
+                py::gil_scoped_acquire acquire;
+                py::object ret = (*recv_fn)(tag);
+                return ret.cast<std::string>();
+              };
+
           py::gil_scoped_release release;
-          
-          auto ctx = psi::utils::Createlinks(role, taskid, chl_type, party, redis, 
-                                               connect_wait_time, use_redis, net_log_switch, meta);
+          auto ctx = psi::utils::Createlinks(role, std::move(send_wrapper), std::move(recv_wrapper));
           return ctx;
         },
         py::arg("role"),
-        py::arg("taskid"),
-        py::arg("chl_type"),
-        py::arg("party")="localhost:50051",
-        py::arg("redis")="localhost:6379",
-        py::arg("meta") = std::map<std::string, std::string>(),
-        py::arg("connect_wait_time") = 60000,
-        py::arg("use_redis") = true,
-        py::arg("net_log_switch") = false,
-        "Setup GRPC links for PSI communication");
+        py::arg("send_cb"),
+        py::arg("recv_cb"),
+        "Create Context and inject memory send/recv callbacks");
       
 }
-
