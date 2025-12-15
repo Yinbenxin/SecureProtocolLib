@@ -28,6 +28,12 @@ py_test(
 )
 
 py_test(
+    name = "vole_psi_test",
+    srcs = ["vole_psi_test.py"],
+    deps = ["//pyspl:pyspl"],
+)
+
+py_test(
     name = "ecdh_ke_test",
     srcs = ["ecdh_ke_test.py"],
     deps = ["//pyspl:pyspl"],

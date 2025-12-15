@@ -16,7 +16,7 @@
 
 #include "cpp/psi/psi.h"
 #include "cpp/psi/ecdhpsi/ecdh_psi.h"
-// #include "cpp/psi/volepsi/vole_psi.h"
+#include "cpp/psi/volepsi/vole_psi.h"
 // #include "cpp/psi/circuit_psi/circuit_psi.h"
 #include "fmt/format.h"
 #include "nlohmann/json.hpp"
@@ -29,18 +29,20 @@ std::vector<std::string> PsiExecute(const std::shared_ptr<yacl::link::Context>& 
     // json解析config_json
     nlohmann::json config = nlohmann::json::parse(config_json);
     // 从config中提取psi_type
-    int psi_protocol = config.value("psi_protocol", 0);
+    SPDLOG_INFO("[PsiExecute] config_json: {}", config_json);
+
+    int psi_type = config.value("psi_type", 0);
     auto log_dir = config.value("log_dir", "spllogs/log");
     spl::logging::setup_rotating_file_logger(log_dir);
-    SPDLOG_INFO("[PsiExecute] psi_protocol: {}", psi_protocol);
-    if (psi_protocol == 0) {  // ECDH PSI
+    SPDLOG_INFO("[PsiExecute] psi_type: {}", psi_type);
+    if (psi_type == 0) {  // ECDH PSI
         return ecdh_execute(lctx, config_json, input);
     } 
-    // else if (psi_protocol == 1) {  // VOLE PSI
-    //     // return vole_execute(lctx, config_json, input); 
-    // }
+    else if (psi_type == 1) {  // VOLE PSI
+        return vole_execute(lctx, config_json, input); 
+    }
      else {
-        throw std::runtime_error("PSI type not supported: " + std::to_string(psi_protocol));
+        throw std::runtime_error("PSI type not supported: " + std::to_string(psi_type));
     }
 }
 // std::vector<std::vector<int64_t>> LabelPsiExecute(const std::shared_ptr<yacl::link::Context>& lctx,
@@ -50,15 +52,15 @@ std::vector<std::string> PsiExecute(const std::shared_ptr<yacl::link::Context>& 
 //     // json解析config_json
 //     nlohmann::json config = nlohmann::json::parse(config_json);
 //     // 从config中提取psi_type
-//     int psi_protocol = config.value("psi_protocol", 0);
+//     int psi_type = config.value("psi_type", 0);
 //     auto log_dir = config.value("log_dir", "spllogs/log");
 //     spl::logging::setup_rotating_file_logger(log_dir);
-//     SPDLOG_INFO("[LabelPsiExecute] psi_protocol: {}", psi_protocol);
-//     if (psi_protocol == 0) {  // circuit PSI
+//     SPDLOG_INFO("[LabelPsiExecute] psi_type: {}", psi_type);
+//     if (psi_type == 0) {  // circuit PSI
 //         return circuit_execute(lctx, config_json, id, label);
 //     } 
 //     else {
-//         throw std::runtime_error("PSI type not supported: " + std::to_string(psi_protocol));
+//         throw std::runtime_error("PSI type not supported: " + std::to_string(psi_type));
 //     }
 // }
 }  // namespace psi

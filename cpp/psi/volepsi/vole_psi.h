@@ -30,8 +30,8 @@
 #include "yacl/crypto/tools/prg.h"
 #include "yacl/link/test_util.h"
 #include "yacl/link/context.h"
-#include "psi/rr22/rr22_psi.h"
-#include "psi/rr22/rr22_utils.h"
+#include "psi/algorithm/rr22/rr22_psi.h"
+#include "psi/algorithm/rr22/rr22_utils.h"
 #include "psi/utils/hash_bucket_cache.h"
 #include "cpp/tools/network/network_utils.h"
 namespace psi {

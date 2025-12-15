@@ -27,7 +27,7 @@
 #include "yacl/link/context.h"
 
 #include "vole_psi.h"
-#include "cpp/psi/utils/network_utils.h"
+
 
 namespace {
 
@@ -48,7 +48,7 @@ std::vector<std::string> GenerateTestData(size_t size) {
 
 
 // 运行 VolePsi
-void RunVolePsi(size_t role, const std::vector<std::string>& test_data) {
+void RunVolePsi(size_t role, std::shared_ptr<yacl::link::Context> ctx, const std::vector<std::string>& test_data) {
   // 创建配置JSON
   nlohmann::json config;
   config["role"] = role;
@@ -62,7 +62,6 @@ void RunVolePsi(size_t role, const std::vector<std::string>& test_data) {
   std::string config_json = config.dump();
   
   // 创建链接
-  auto ctx = psi::utils::Createlinks(role, "VOLE-PSI-test", "mem");
   SPDLOG_INFO("Role {} starting PSI computation...", role);
   
   // 开始计时
@@ -98,14 +97,15 @@ void RunVolePsi(size_t role, const std::vector<std::string>& test_data) {
 int main() {
 
   SPDLOG_INFO("Preparing test data...");
+  auto ctxs = yacl::link::test::SetupBrpcWorld(2);
   
   // 开始数据准备计时
   std::vector<std::string> data0 = GenerateTestData(100000);
   std::vector<std::string> data1 = GenerateTestData(100000);
   
   // 创建两个线程，分别运行角色 0 和角色 1 的PSI计算
-  std::thread t0(RunVolePsi, 0, std::cref(data0));
-  std::thread t1(RunVolePsi, 1, std::cref(data1));
+  std::thread t0(RunVolePsi, 0, ctxs[0], std::cref(data0));
+  std::thread t1(RunVolePsi, 1, ctxs[1], std::cref(data1));
   
   // 等待线程结束
   t0.join();
