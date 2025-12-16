@@ -1,3 +1,6 @@
+// Enable Python stable ABI targeting Python 3.8 to avoid symbols unavailable in older runtimes
+#define Py_LIMITED_API 0x03080000
+#define PYBIND11_ENABLE_STABLE_ABI
 #include "pybind11/functional.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
