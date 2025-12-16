@@ -8,6 +8,8 @@ variables:
   APP_NAME: secure_protocol_lib
 
 before_script:
+  - export https_proxy=$PROXY_URL
+  - export http_proxy=$PROXY_URL
   - devpi use $DEVPI_URL
   - devpi login $DEVPI_USERNAME --password=$DEVPI_PASSWORD
  
