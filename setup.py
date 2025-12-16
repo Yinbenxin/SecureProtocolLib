@@ -36,7 +36,7 @@ class BazelBuildExt(build_ext):
 
         # 调用Bazel构建目标
         subprocess.check_call(
-            ['bazel', 'build', '--config=linux-release', ext.bazel_target],
+            ['bazel', 'build', ext.bazel_target],
             cwd=os.path.abspath(os.path.dirname(__file__))
         )
 
@@ -70,7 +70,7 @@ class CustomSdist(sdist):
         
         # 删除生成的tar.gz文件
         dist_dir = os.path.join(os.path.dirname(__file__), 'dist')
-        tar_gz_file = os.path.join(dist_dir, 'pyspl-0.1.0.tar.gz')
+        tar_gz_file = os.path.join(dist_dir, 'pyspl-0.6.0.tar.gz')
         
         if os.path.exists(tar_gz_file):
             os.remove(tar_gz_file)
@@ -78,7 +78,7 @@ class CustomSdist(sdist):
 
 setup(
     name="pyspl",
-    version="0.1.0",
+    version="0.6.0",
     author="Ant Group",
     description="A PSI (Private Set Intersection) implementation using VOLE",
     long_description=open("README.md", "r").read() if os.path.exists("README.md") else "",
