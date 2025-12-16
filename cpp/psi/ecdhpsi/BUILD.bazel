@@ -17,6 +17,7 @@ curve_cc_library(
         "@yacl//yacl/crypto/rand",
         "@yacl//yacl/link:context",
         "//cpp/tools/network:network_utils",
+        "@com_github_nlohmann_json//:json",
     ],
 )
 
@@ -36,4 +37,3 @@ curve_cc_binary(
         ":ecdh_psi",
     ],
 )
-
