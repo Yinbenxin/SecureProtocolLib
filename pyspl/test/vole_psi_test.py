@@ -5,6 +5,9 @@ import json
 import time
 from pyspl import PSIExecute, CreateChannel, PSIType, CurveType
 
+# 输出python版本
+import sys
+print(f"Python version: {sys.version}")
 
 def generate_test_data(size):
     # 生成随机的 uint128 数据

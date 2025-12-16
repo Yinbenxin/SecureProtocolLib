@@ -1,6 +1,3 @@
-// Enable Python stable ABI targeting Python 3.8 to avoid symbols unavailable in older runtimes
-#define Py_LIMITED_API 0x03080000
-#define PYBIND11_ENABLE_STABLE_ABI
 #include "pybind11/functional.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
@@ -12,6 +9,21 @@
 #include <string>
 #include <map>
 #include <memory>
+
+extern "C" {
+#include "Python.h"
+#include "frameobject.h"
+}
+
+extern "C" PyCodeObject* PyFrame_GetCode(PyFrameObject* frame) {
+  Py_INCREF(frame->f_code);
+  return frame->f_code;
+}
+
+extern "C" PyFrameObject* PyFrame_GetBack(PyFrameObject* frame) {
+  Py_XINCREF(frame->f_back);
+  return frame->f_back;
+}
 
 namespace py = pybind11;
 

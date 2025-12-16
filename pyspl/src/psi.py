@@ -1,6 +1,13 @@
 from math import log
-from .spllib import psi_execute as PSIExecute
-# from .spllib import label_psi_execute 
+
+try:
+    from .spllib import psi_execute as PSIExecute  # type: ignore[attr-defined]
+except ModuleNotFoundError:
+    try:
+        from ..spllib import psi_execute as PSIExecute  # type: ignore[attr-defined]
+    except ModuleNotFoundError:
+        from pyspl.spllib import psi_execute as PSIExecute  # type: ignore[attr-defined]
+
 from enum import Enum
 from decimal import Decimal
 import logging

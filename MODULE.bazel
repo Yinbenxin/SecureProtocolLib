@@ -85,10 +85,11 @@ llvm.configure(
 use_repo(llvm, "llvm-project")
 # END for experimental/squirrel and examples/cpp
 
-DEFAULT_PYTHON_VERSION = "3.10"
+DEFAULT_PYTHON_VERSION = "3.8"
 
 SUPPORTED_PYTHON_VERSIONS = [
-    # "3.9",
+    "3.8",
+    "3.9",
     "3.10",
     "3.11",
 ]

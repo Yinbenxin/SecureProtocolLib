@@ -4,14 +4,12 @@ from setuptools.command.sdist import sdist
 import os
 import subprocess
 import sys
-# 安装开发版本
-# python setup.py develop
 
 # 构建分发包
 # python setup.py sdist bdist_wheel
-
 # 安装
 # pip install .
+
 class BazelExtension(Extension):
     """用于从Bazel构建的Python扩展"""
     def __init__(self, name, bazel_target):
@@ -27,7 +25,7 @@ class BazelBuildExt(build_ext):
     def build_extension(self, ext):
         if not isinstance(ext, BazelExtension):
             super().build_extension(ext)
-            returns
+            return
 
         # 确保输出目录存在
         os.makedirs(self.build_temp, exist_ok=True)
@@ -40,28 +38,28 @@ class BazelBuildExt(build_ext):
             cwd=os.path.abspath(os.path.dirname(__file__))
         )
 
-        # 找到构建的.so文件并复制到正确的位置
         bazel_bin_dir = os.path.join(
             os.path.abspath(os.path.dirname(__file__)),
             'bazel-bin', 'pyspl', 'src'
         )
-        
-        # 根据操作系统确定扩展名
+
         if sys.platform == 'darwin':
             ext_suffix = '.so'
         elif sys.platform == 'win32':
             ext_suffix = '.pyd'
-        else:  # Linux和其他类Unix系统
+        else:
             ext_suffix = '.so'
-            
-        # 复制spllib.so到目标目录
+
         src_file = os.path.join(bazel_bin_dir, 'spllib' + ext_suffix)
-        dst_file = os.path.join(extdir, 'src', 'spllib' + ext_suffix)
-        
+        dst_dir = os.path.join(extdir, 'src')
+        os.makedirs(dst_dir, exist_ok=True)
+        dst_file = os.path.join(dst_dir, 'spllib' + ext_suffix)
+
         if os.path.exists(src_file):
             self.copy_file(src_file, dst_file)
         else:
             raise RuntimeError(f"找不到构建的扩展文件: {src_file}")
+
 class CustomSdist(sdist):
     """自定义sdist命令，构建完成后删除tar.gz文件"""
     def run(self):
@@ -80,7 +78,7 @@ setup(
     name="pyspl",
     version="0.6.0",
     author="Ant Group",
-    description="A PSI (Private Set Intersection) implementation using VOLE",
+    description="密码算法库",
     long_description=open("README.md", "r").read() if os.path.exists("README.md") else "",
     long_description_content_type="text/markdown",
     packages=find_packages(),
@@ -89,8 +87,7 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.6",
-    # 修改这一行，使用正确的目标名称
+    python_requires=">=3.8",
     ext_modules=[BazelExtension("pyspl.spllib", "//pyspl/src:spllib_so")],
     cmdclass={
         'build_ext': BazelBuildExt,
