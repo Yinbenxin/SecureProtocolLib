@@ -10,6 +10,18 @@
 #include <map>
 #include <memory>
 
+extern "C" {
+#include "Python.h"
+#include "frameobject.h"
+}
+
+extern "C" PyCodeObject* PyFrame_GetCode(PyFrameObject* frame) {
+  Py_INCREF(frame->f_code);
+  return frame->f_code;
+}
+
+
+
 namespace py = pybind11;
 
 #define NO_GIL py::call_guard<py::gil_scoped_release>()
