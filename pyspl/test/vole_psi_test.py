@@ -27,6 +27,7 @@ def run_vole_psi(role, mailbox0, mailbox1):
     
     logging.info(f"Python - 角色 {role} 开始初始化 PSIParty")
     logging.info(f"Python - 配置: {config_json}")
+    
     # 定义内存通信回调：发送写入对方的mailbox，接收从自己的mailbox读取
     def send_cb(tag: str, payload: bytes) -> int:
         if role == 0:

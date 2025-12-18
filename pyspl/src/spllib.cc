@@ -36,8 +36,8 @@ PYBIND11_MODULE(spllib, m) {
   m.def("psi_execute", &psi::PsiExecute, "psi execute", py::arg("config"),
         py::arg("lctx"), py::arg("input"), NO_GIL);
 
-  // m.def("label_psi_execute", &psi::LabelPsiExecute, "label psi execute", py::arg("config"),
-  //       py::arg("lctx"), py::arg("id"), py::arg("label"), NO_GIL);
+  m.def("label_psi_execute", &psi::LabelPsiExecute, "label psi execute", py::arg("config"),
+        py::arg("lctx"), py::arg("id"), py::arg("label"), NO_GIL);
   
   // m.def("ke_execute", &ke::KEExecute, "key exchange execute", py::arg("config"),
   //       py::arg("lctx"), py::arg("key_exchange_size"), NO_GIL);

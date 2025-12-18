@@ -2,11 +2,14 @@ from math import log
 
 try:
     from .spllib import psi_execute as PSIExecute  # type: ignore[attr-defined]
+    from .spllib import label_psi_execute as _label_psi_execute  # type: ignore[attr-defined]
 except ModuleNotFoundError:
     try:
         from ..spllib import psi_execute as PSIExecute  # type: ignore[attr-defined]
+        from ..spllib import label_psi_execute as _label_psi_execute  # type: ignore[attr-defined]
     except ModuleNotFoundError:
         from pyspl.spllib import psi_execute as PSIExecute  # type: ignore[attr-defined]
+        from pyspl.spllib import label_psi_execute as _label_psi_execute  # type: ignore[attr-defined]
 
 from enum import Enum
 from decimal import Decimal
@@ -51,24 +54,15 @@ class LabelPSIType(Enum):
             return cls(psi_type).name
         except ValueError:
             return f"UNKNOWN({psi_type})"
-# log2_scale_factor: 对原始数据进行一定放缩，放缩系数为2**log2_scale_factor
 def LabelPSIExecute(ctx, config_json, id, label):
     import json
     log2_scale_factor = json.loads(config_json)["log2_scale_factor"]
     scale_factor = 2 ** log2_scale_factor
-    # 将label乘以缩放因子并转换为int64
-    # label是二维列表，需要对每个子列表中的每个元素进行处理
     scaled_label = [[int(item * scale_factor) for item in sublist] for sublist in label]
-    # 执行PSI计算
-    # result = label_psi_execute(ctx, config_json, id, scaled_label)
-    result =[]
-    # return result
-    # 避免当 scale_factor 为 1 时将大整数转换为 float 导致精度丢失
+    result = _label_psi_execute(ctx, config_json, id, scaled_label)
     if scale_factor == 1:
         scaled_result = [[it for it in sublist] for sublist in result]
     else:
-        # 其它情况下使用 Decimal 做精确除法，避免浮点误差
         scaled_result = [[float(Decimal(it) / Decimal(scale_factor)) for it in sublist] for sublist in result]
-
     return scaled_result
     

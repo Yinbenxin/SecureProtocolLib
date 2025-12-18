@@ -51,7 +51,7 @@ void GenerateTestData(size_t size_id, size_t size_data, std::vector<std::string>
 
 
 // 运行 CircuitPSI
-void RunCircuitPSI(size_t role, const std::vector<std::string>& id, const std::vector<std::vector<int64_t>>& data) {
+void RunCircuitPSI(size_t role, std::function<int(const std::string&, std::string&)> send_cb, std::function<std::string(const std::string&)> recv_cb, const std::vector<std::string>& id, const std::vector<std::vector<int64_t>>& data) {
   // 创建配置JSON
   nlohmann::json config;
   config["role"] = role;
@@ -60,8 +60,8 @@ void RunCircuitPSI(size_t role, const std::vector<std::string>& id, const std::v
   std::string config_json = config.dump();
   
   // 创建链接
-  auto ctx = psi::utils::Createlinks(role, "circuit-PSI-test", "mem");
   SPDLOG_INFO("Role {} starting PSI computation...", role);
+  auto ctx = psi::utils::Createlinks(role, send_cb, recv_cb);
   
   // 开始计时
   auto start_time = std::chrono::high_resolution_clock::now();
@@ -105,8 +105,51 @@ int main() {
   std::vector<std::vector<int64_t>> data1;
   GenerateTestData(1000, 100, id1, data1);
   // 创建两个线程，分别运行角色 0 和角色 1 的PSI计算
-  std::thread t0(RunCircuitPSI, 0, std::cref(id0), std::cref(data0));
-  std::thread t1(RunCircuitPSI, 1, std::cref(id1), std::cref(data1));
+    static std::mutex mtx;
+  static std::condition_variable cv;
+  static std::unordered_map<std::string, std::string> mailbox0;
+  static std::unordered_map<std::string, std::string> mailbox1;
+
+  auto send_cb0 = [](const std::string& tag, std::string& payload) -> int {
+    std::lock_guard<std::mutex> lock(mtx);
+    SPDLOG_INFO("send_cb0->1, tag: {}, payload(size): {}", tag, payload.size());
+
+    mailbox1[tag] = std::move(payload);
+    cv.notify_all();
+    return 0;
+  };
+
+  auto recv_cb0 = [](const std::string& tag) -> std::string {
+    std::unique_lock<std::mutex> lock(mtx);
+    cv.wait(lock, [&]{ return mailbox0.find(tag) != mailbox0.end(); });
+    auto it = mailbox0.find(tag);
+    std::string out = std::move(it->second);
+    SPDLOG_INFO("recv_cb0, tag: {}, payload(size): {}", tag, out.size());
+    mailbox0.erase(it);
+    return out;
+  };
+
+  auto send_cb1 = [](const std::string& tag, std::string& payload) -> int {
+    std::lock_guard<std::mutex> lock(mtx);
+    SPDLOG_INFO("send_cb1->0, tag: {}, payload(size): {}", tag, payload.size());
+
+    mailbox0[tag] = std::move(payload);
+    cv.notify_all();
+    return 0;
+  };
+
+  auto recv_cb1 = [](const std::string& tag) -> std::string {
+    std::unique_lock<std::mutex> lock(mtx);
+    cv.wait(lock, [&]{ return mailbox1.find(tag) != mailbox1.end(); });
+    auto it = mailbox1.find(tag);
+    std::string out = std::move(it->second);
+    SPDLOG_INFO("recv_cb1, tag: {}, payload(size): {}", tag, out.size());
+    mailbox1.erase(it);
+    return out;
+  };
+
+  std::thread t0(RunCircuitPSI, 0, send_cb0, recv_cb0, std::cref(id0), std::cref(data0));
+  std::thread t1(RunCircuitPSI, 1, send_cb1, recv_cb1, std::cref(id1), std::cref(data1));
   
   // 等待线程结束
   t0.join();
